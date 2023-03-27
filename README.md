@@ -1,6 +1,6 @@
 # DecisionApp
 
-# Step 1 initial installations
+## Step 1 initial installations
 
 cd into ../../..DecisionApp-backend %
 
@@ -10,7 +10,7 @@ run: pip install django-cors-headers
 
 cd MyApp
 
-# Step 2 fix migrations
+## Step 2 fix migrations
 
 run: python3 manage.py makemigrations
 
@@ -18,11 +18,11 @@ run: python3 manage.py makemigrations
 
 run: python3 manage.py migrate
 
-# Step 3 run server
+## Step 3 run server
 
 run: python manage.py runserver
 
-## OUTPUT:
+### OUTPUT:
 
 Watching for file changes with StatReloader
 Performing system checks...
