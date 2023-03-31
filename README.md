@@ -1,36 +1,38 @@
 # DecisionApp
 
-# Step 1 initial installations
+## Step 1 initial installations
 
 cd into ../../..DecisionApp-backend %
 
-run: pip install -r requirements.txt
+    pip install -r requirements.txt
 
-run: pip install django-cors-headers
+    pip install django-cors-headers
 
-cd MyApp
+    cd MyApp
 
-# Step 2 fix migrations
+## Step 2 fix migrations
 
-run: python3 manage.py makemigrations
+    python3 manage.py makemigrations
 
-    #should see no changes
+        //should see no changes
 
-run: python3 manage.py migrate
+    python3 manage.py migrate
+    
+        //list of items with a green OK..
 
-# Step 3 run server
+## Step 3 run server
 
-run: python manage.py runserver
+    python manage.py runserver
 
-## OUTPUT:
+#### OUTPUT:
 
-Watching for file changes with StatReloader
-Performing system checks...
+    Watching for file changes with StatReloader
+    Performing system checks...
 
-System check identified no issues (0 silenced).
-March 27, 2023 - 19:47:38
-Django version 3.2.2, using settings 'MyApp.settings'
-Starting development server at http://127.0.0.1:8000/
-Quit the server with CONTROL-C.
+    System check identified no issues (0 silenced).
+    March 27, 2023 - 19:47:38
+    Django version 3.2.2, using settings 'MyApp.settings'
+    Starting development server at http://127.0.0.1:8000/
+    Quit the server with CONTROL-C.
 
-## Server should be up and running
+#### Server should be up and running
