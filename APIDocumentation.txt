@@ -1,0 +1,75 @@
+API Documentation
+Base URL
+https://localhost:8000
+Endpoints
+1. TestView
+GET http://localhost:8000/api/v1.0/user/test
+This endpoint is used to check if the API is reachable and working as expected.
+No Parameters
+Expected Response:
+Status Code: 200
+Content: "You Made It"
+2. UsersView
+POST http://localhost:8000/api/v1.0/user/create-user/
+This endpoint is used to create a new user.
+Parameters:
+username (string, required): A unique username for the user.
+email (string, required): A unique email address for the user.
+first_name (string, required): The user's first name.
+last_name (string, required): The user's last name.
+password (string, required): The user's password (min. 8 characters).
+Expected Response:
+Status Code: 200
+Content:
+{
+    "user": {
+        "token": "your_jwt_token",
+        "username": "your_username",
+        "first_name": "your_first_name",
+        "last_name": "your_last_name",
+        "email": "your_email",
+        "id": user_id
+    }
+}
+Error Response:
+Status Code: 400
+Content: {"msg": "ERR in API"}
+3. UserLoginView
+GET http://localhost:8000/api/v1.0/user/get-user
+This endpoint is used to convert a user token into user data.
+Make sure to include the JWT token in the Authorization header with the JWT prefix, like this:
+Authorization: JWT your_jwt_token
+Expected Response:
+Status Code: 200
+Content:
+{
+    "token": "your_jwt_token",
+    "username": "your_username",
+    "first_name": "your_first_name",
+    "last_name": "your_last_name",
+    "email": "your_email",
+    "id": user_id
+}
+Error Response:
+Status Code: 403
+Content: "Invalid Credentials"
+POST http://localhost:8000/api/v1.0/user/login-user/
+This endpoint is used to authenticate the user and return their user data along with a JWT token.
+Parameters:
+username (string, required): The user's username or email address.
+password (string, required): The user's password.
+Expected Response:
+Status Code: 200
+Content:
+{
+    "token": "your_jwt_token",
+    "username": "your_username",
+    "first_name": "your_first_name",
+    "last_name": "your_last_name",
+    "email": "your_email",
+    "id": user_id
+}
+Error Response:
+Status Code: 403
+Content: "Invalid Credentials"
+
