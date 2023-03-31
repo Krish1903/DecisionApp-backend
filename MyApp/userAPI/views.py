@@ -70,3 +70,20 @@ class UserLoginView(APIView):
                 return Response(user_serializer.data, status=200)
 
         return Response("Invalid Credentials", status=403)
+
+
+class HardcodedUserView(APIView):
+    def get(self, request, format=None):
+        # Create a fake user instance
+        fake_user = User(
+            id=9999,
+            username='fakeuser',
+            email='fakeuser@fake.com',
+            first_name='Fake',
+            last_name='User',
+        )
+        fake_user.set_password('fakepassword')
+
+        user_serializer = UserSerializer(fake_user)
+
+        return Response(user_serializer.data, status=200)
