@@ -3,10 +3,14 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import UserSerializer
+from .serializers import UserSerializer, PollSerializer, AnswerSerializer, ChoiceSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+
+from .models import Poll, Answer, Choice
+
+from rest_framework import generics
 
 # Create your views here.
 
@@ -72,18 +76,31 @@ class UserLoginView(APIView):
         return Response("Invalid Credentials", status=403)
 
 
-class HardcodedUserView(APIView):
-    def get(self, request, format=None):
-        # Create a fake user instance
-        fake_user = User(
-            id=9999,
-            username='fakeuser',
-            email='fakeuser@fake.com',
-            first_name='Fake',
-            last_name='User',
-        )
-        fake_user.set_password('fakepassword')
+class PollList(generics.ListCreateAPIView):
+    queryset = Poll.objects.all()
+    serializer_class = PollSerializer
 
-        user_serializer = UserSerializer(fake_user)
 
-        return Response(user_serializer.data, status=200)
+class PollDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Poll.objects.all()
+    serializer_class = PollSerializer
+
+
+class AnswerList(generics.ListCreateAPIView):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+
+
+class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+
+
+class ChoiceList(generics.ListCreateAPIView):
+    queryset = Choice.objects.all()
+    serializer_class = ChoiceSerializer
+
+
+class ChoiceDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Choice.objects.all()
+    serializer_class = ChoiceSerializer
