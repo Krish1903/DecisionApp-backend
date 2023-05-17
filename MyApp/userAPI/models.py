@@ -1,33 +1,26 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+import uuid
+
 # Create your models here
 
-
 class Poll(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    question = models.CharField(max_length=200)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    question = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.question
-
-
-class Answer(models.Model):
-    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
-    text = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.text
-
-# represents a user's choice in a poll
+    owner = models.ForeignKey(User, related_name='created_polls', on_delete=models.CASCADE)
+    expires = models.DateTimeField()
 
 
-class Choice(models.Model):
-    # uses foreign keys for the user, the poll, and the answer.
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
-    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+class Option(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    value = models.CharField(max_length=200)
+    poll = models.ForeignKey(Poll, related_name='options', on_delete=models.CASCADE)
+    votes = models.ManyToManyField(User, related_name='voted_options')
 
-    def __str__(self):
-        return f"{self.user.username} - {self.poll.question} - {self.answer.text}"
+
+class UserAccount(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    interacted_polls = models.ManyToManyField(Poll, related_name='interacted_users')
+    created_at = models.DateTimeField(auto_now_add=True)

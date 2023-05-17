@@ -2,7 +2,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_jwt.settings import api_settings
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Poll, Answer, Choice
+from .models import Poll, UserAccount, Option
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -62,37 +62,37 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-class AnswerSerializer(serializers.ModelSerializer):
+class UserAccountSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
     class Meta:
-        model = Answer
+        model = UserAccount
         fields = (
-            'id',
-            'poll',
-            'text'
+            "user",
+            "interacted_polls",
+            "created_at"
         )
 
 
 class PollSerializer(serializers.ModelSerializer):
-    answers = AnswerSerializer(many=True, read_only=True)
-
     class Meta:
         model = Poll
         fields = (
-            'id',
-            'user',
-            'question',
-            'created_at',
-            'answers'
+            "id",
+            "question",
+            "created_at",
+            "owner",
+            "expires",
+            "options"
         )
-        # Should add a field for time remaining... need to look into that
 
 
-class ChoiceSerializer(serializers.ModelSerializer):
+class OptionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Choice
+        model = Option
         fields = (
-            'id',
-            'user',
-            'poll',
-            'answer'
+            "id",
+            "value",
+            "votes",
+            "poll"
         )

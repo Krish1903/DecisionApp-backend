@@ -3,12 +3,12 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import UserSerializer, PollSerializer, AnswerSerializer, ChoiceSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-from .models import Poll, Answer, Choice
+from .models import Poll, UserAccount, Option
 
 from rest_framework import generics
 
@@ -76,31 +76,31 @@ class UserLoginView(APIView):
         return Response("Invalid Credentials", status=403)
 
 
-class PollList(generics.ListCreateAPIView):
-    queryset = Poll.objects.all()
-    serializer_class = PollSerializer
+class UserAccountView(APIView):
+    def get(self, request, format=None):
+        if not request.user.is_authenticated:
+            return Response("Invalid Credentials", status=403)
+
+        profile = UserAccount.objects.get(user=request.user)
+        serializer = UserAccount(profile)
+        return Response(serializer.data, status=200)
 
 
-class PollDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Poll.objects.all()
-    serializer_class = PollSerializer
+class PollsView(APIView):
+    def post(self, request, format=None):
+        poll_data = request.data
+        poll_serializer = PollSerializer(data=poll_data)
+        if poll_serializer.is_valid():
+            poll_serializer.save()
+            return Response({"poll": poll_serializer.data}, status=200)
+        return Response({"msg": "ERR with poll data"}, status=400)
 
 
-class AnswerList(generics.ListCreateAPIView):
-    queryset = Answer.objects.all()
-    serializer_class = AnswerSerializer
-
-
-class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Answer.objects.all()
-    serializer_class = AnswerSerializer
-
-
-class ChoiceList(generics.ListCreateAPIView):
-    queryset = Choice.objects.all()
-    serializer_class = ChoiceSerializer
-
-
-class ChoiceDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Choice.objects.all()
-    serializer_class = ChoiceSerializer
+class OptionsView(APIView):
+    def post(self, request, format=None):
+        option_data = request.data
+        option_serializer = OptionSerializer(data=option_data)
+        if option_serializer.is_valid():
+            option_serializer.save()
+            return Response({"option": option_serializer.data}, status=200)
+        return Response({"msg": "ERR with option data"}, status=400)

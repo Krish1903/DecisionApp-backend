@@ -6,12 +6,9 @@ urlpatterns = [
     path("create-user/", views.UsersView.as_view()),
     path("get-user/", views.UserLoginView.as_view()),
     path('login-user/', views.UserLoginView.as_view()),
-    path('polls/', views.PollList.as_view(), name='poll-list'),
-    path('polls/<int:pk>/', views.PollDetail.as_view(), name='poll-detail'),
-    path('answers/', views.AnswerList.as_view(), name='answer-list'),
-    path('answers/<int:pk>/', views.AnswerDetail.as_view(), name='answer-detail'),
-    path('choices/', views.ChoiceList.as_view(), name='choice-list'),
-    path('choices/<int:pk>/', views.ChoiceDetail.as_view(), name='choice-detail'),
+    path("user-profile/", views.UserAccountView.as_view()),
+    path("create-poll/", views.PollsView.as_view()),
+    path("create-option/", views.OptionsView.as_view()),
 ]
 
 
