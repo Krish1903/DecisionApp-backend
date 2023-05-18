@@ -16,6 +16,7 @@ class Poll(models.Model):
     owner = models.ForeignKey(
         User, related_name='created_polls', on_delete=models.CASCADE, null=True)
     expires = models.DateTimeField(default=timezone.now() + timedelta(days=7))
+    image_url = models.URLField(blank=True)
 
 
 class Option(models.Model):
@@ -24,6 +25,7 @@ class Option(models.Model):
     poll = models.ForeignKey(
         Poll, related_name='options', on_delete=models.CASCADE)
     votes = models.ManyToManyField(User, related_name='voted_options')
+    image_url = models.URLField(blank=True)
 
 
 class UserAccount(models.Model):
@@ -31,3 +33,7 @@ class UserAccount(models.Model):
     interacted_polls = models.ManyToManyField(
         Poll, related_name='interacted_users')
     created_at = models.DateTimeField(auto_now_add=True)
+    profile_picture = models.URLField(blank=True)
+    bio = models.CharField(max_length=300, blank=True)
+    following = models.ManyToManyField(
+        'self', related_name='followers', symmetrical=False)

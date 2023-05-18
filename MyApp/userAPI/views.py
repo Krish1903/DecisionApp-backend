@@ -3,14 +3,14 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 from .models import Poll, UserAccount, Option
 
-from rest_framework import generics
+from rest_framework.pagination import LimitOffsetPagination
 
 # Create your views here.
 
@@ -25,7 +25,7 @@ class TestView(APIView):
     # def post():
         # ...
 
-    # send something to django to update object
+    # send something to django to update and already created object
     # def put():
         # ...
 
@@ -85,6 +85,18 @@ class UserAccountView(APIView):
         serializer = UserAccount(profile)
         return Response(serializer.data, status=200)
 
+    def put(self, request, format=None):
+        if not request.user.is_authenticated:
+            return Response("Invalid Credentials", status=403)
+
+        profile = UserAccount.objects.get(user=request.user)
+        serializer = UserAccountSerializer(
+            profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
 
 class PollsView(APIView):
     def post(self, request, format=None):
@@ -104,3 +116,34 @@ class OptionsView(APIView):
             option_serializer.save()
             return Response({"option": option_serializer.data}, status=200)
         return Response({"msg": "ERR with option data"}, status=400)
+
+    def put(self, request, format=None):
+        if 'id' not in request.data:
+            return Response("Option id is missing", status=400)
+
+        try:
+            option = Option.objects.get(id=request.data['id'])
+        except Option.DoesNotExist:
+            return Response("Option not found", status=404)
+
+        serializer = OptionSerializer(option, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
+class FollowersPollsView(APIView):
+    pagination_class = LimitOffsetPagination
+
+    def get(self, request, format=None):
+        if not request.user.is_authenticated:
+            return Response("Invalid Credentials", status=403)
+
+        user_account = UserAccount.objects.get(user=request.user)
+        followers_polls = Poll.objects.filter(
+            owner__useraccount__in=user_account.followers.all()).order_by('expires')
+        page = self.pagination_class.paginate_queryset(
+            followers_polls, request)
+        serializer = PollSerializer(page, many=True)
+        return self.pagination_class.get_paginated_response(serializer.data)

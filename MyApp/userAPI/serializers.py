@@ -9,6 +9,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     token = serializers.SerializerMethodField()
 
+    profile_picture = serializers.URLField(
+        source='useraccount.profile_picture', required=False)
+
+    bio = serializers.CharField(
+        source='useraccount.bio', required=False)
+
     email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
@@ -20,14 +26,11 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
 
-    first_name = serializers.CharField(
+    full_name = serializers.CharField(
         required=True,
-        max_length=32,
+        max_length=64,
     )
-    last_name = serializers.CharField(
-        required=True,
-        max_length=32,
-    )
+
     password = serializers.CharField(
         required=True,
         min_length=8,
@@ -55,23 +58,36 @@ class UserSerializer(serializers.ModelSerializer):
             "token",
             "username",
             "password",
-            "first_name",
-            "last_name",
+            "full_name",
             "email",
-            "id"
+            "id",
+            "profile_picture",
+            "bio",
         )
 
 
 class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+    following = serializers.SerializerMethodField()
+    followers = serializers.SerializerMethodField()
 
     class Meta:
         model = UserAccount
         fields = (
             "user",
             "interacted_polls",
-            "created_at"
+            "created_at",
+            "profile_picture",
+            "bio",
+            "following",
+            "followers",
         )
+
+    def get_following(self, obj):
+        return UserSerializer(obj.following.all(), many=True).data
+
+    def get_followers(self, obj):
+        return UserSerializer(obj.followers.all(), many=True).data
 
 
 class PollSerializer(serializers.ModelSerializer):
@@ -83,7 +99,8 @@ class PollSerializer(serializers.ModelSerializer):
             "created_at",
             "owner",
             "expires",
-            "options"
+            "options",
+            "image_url",
         )
 
 
@@ -94,5 +111,6 @@ class OptionSerializer(serializers.ModelSerializer):
             "id",
             "value",
             "votes",
-            "poll"
+            "poll",
+            "image_url",
         )
