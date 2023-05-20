@@ -6,10 +6,10 @@ from .models import Poll, UserAccount, Option
 
 
 class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.SerializerMethodField()
-
-    def get_full_name(self, obj):
-        return f"{obj.first_name} {obj.last_name}"
+    full_name = serializers.CharField(
+        required=True,
+        max_length=64,
+    )
 
     token = serializers.SerializerMethodField()
 
@@ -30,11 +30,6 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
 
-    full_name = serializers.CharField(
-        required=True,
-        max_length=64,
-    )
-
     password = serializers.CharField(
         required=True,
         min_length=8,
@@ -43,7 +38,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
-        instance = self.Meta.model(**validated_data)
+        full_name = validated_data.pop("full_name", None)
+
+        first_name, last_name = self.split_full_name(full_name)
+
+        instance = self.Meta.model(
+            first_name=first_name, last_name=last_name, **validated_data)
+
         if password is not None:
             instance.set_password(password)
         instance.save()
@@ -55,6 +56,15 @@ class UserSerializer(serializers.ModelSerializer):
         payload = jwt_payload_handler(obj)
         token = jwt_encode_handler(payload)
         return token
+
+    def split_full_name(self, full_name):
+        parts = full_name.split()
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
+        return first_name, last_name
+
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
 
     class Meta:
         model = User
