@@ -42,7 +42,7 @@ class UsersView(APIView):
         if user_serializer.is_valid(raise_exception=False):
             user_serializer.save()
             return Response({"user": user_serializer.data}, status=200)
-
+        print(user_serializer.errors)
         return Response({"msg": "ERR in API"}, status=400)
 
 
