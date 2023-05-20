@@ -42,7 +42,8 @@ class UserSerializer(serializers.ModelSerializer):
 
         first_name, last_name = self.split_full_name(full_name)
 
-        instance = self.Meta.model(first_name=first_name, last_name=last_name, **validated_data)
+        instance = self.Meta.model(
+            first_name=first_name, last_name=last_name, **validated_data)
 
         if password is not None:
             instance.set_password(password)
@@ -57,6 +58,9 @@ class UserSerializer(serializers.ModelSerializer):
         return token
 
     def split_full_name(self, full_name):
+        if full_name is None:
+            return '', ''
+
         parts = full_name.split()
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
@@ -77,6 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
             "profile_picture",
             "bio",
         )
+
 
 class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
