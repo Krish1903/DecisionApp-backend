@@ -7,8 +7,8 @@ from .models import Poll, UserAccount, Option
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(
-        required=True,
-        max_length=64,
+        source='get_full_name',
+        read_only=True
     )
 
     token = serializers.SerializerMethodField()
@@ -42,8 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         first_name, last_name = self.split_full_name(full_name)
 
-        instance = self.Meta.model(
-            first_name=first_name, last_name=last_name, **validated_data)
+        instance = self.Meta.model(first_name=first_name, last_name=last_name, **validated_data)
 
         if password is not None:
             instance.set_password(password)
@@ -78,7 +77,6 @@ class UserSerializer(serializers.ModelSerializer):
             "profile_picture",
             "bio",
         )
-
 
 class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
