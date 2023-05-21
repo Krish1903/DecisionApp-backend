@@ -37,14 +37,15 @@ class UserSerializer(serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
-        password = validated_data.pop("password", None)
-        full_name = validated_data.pop("full_name", None)
-
-        first_name, last_name = self.split_full_name(full_name)
-
-        instance = self.Meta.model(
-            first_name=first_name, last_name=last_name, **validated_data)
-
+        full_name = validated_data.pop('full_name', None)
+        password = validated_data.pop('password', None)
+        if full_name:
+            split_name = full_name.split(' ', 1)
+            first_name = split_name[0]
+            last_name = split_name[1] if len(split_name) > 1 else ''
+            validated_data['first_name'] = first_name
+            validated_data['last_name'] = last_name
+        instance = self.Meta.model(**validated_data)
         if password is not None:
             instance.set_password(password)
         instance.save()
