@@ -43,6 +43,7 @@ class UsersView(APIView):
             user_serializer.save()
             return Response(user_serializer.data, status=200)
 
+        print(user_serializer.errors)
         return Response({"msg": "ERR in API"}, status=400)
 
 
