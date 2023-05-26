@@ -3,12 +3,12 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, GoogleUserSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-from .models import Poll, UserAccount, Option
+from .models import Poll, UserAccount, Option, GoogleUser
 
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -91,12 +91,23 @@ class UserAccountView(APIView):
             return Response("Invalid Credentials", status=403)
 
         profile = UserAccount.objects.get(user=request.user)
-        serializer = UserAccountSerializer(
-            profile, data=request.data, partial=True)
+        data = {
+            'bio': request.data.get('bio', profile.bio),
+            'profile_picture': request.data.get('profile_picture', profile.profile_picture)
+        }
+        serializer = UserAccountSerializer(profile, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+
+    def delete(self, request, format=None):
+        if not request.user.is_authenticated:
+            return Response("Invalid Credentials", status=403)
+
+        user = request.user
+        user.delete()
+        return Response({"msg": "User account successfully deleted"}, status=200)
 
 
 class PollsView(APIView):
@@ -148,3 +159,44 @@ class FollowersPollsView(APIView):
             followers_polls, request)
         serializer = PollSerializer(page, many=True)
         return self.pagination_class.get_paginated_response(serializer.data)
+
+
+class GoogleLoginView(APIView):
+    serializer_class = GoogleUserSerializer
+
+    def post(self, request):
+        email = request.data.get('email')
+        google_id = request.data.get('id')
+        full_name = request.data.get('name')
+        profile_picture = request.data.get('picture')
+
+        user, created = User.objects.get_or_create(email=email)
+        if created:
+            user.username = email.split('@')[0]
+            user.set_unusable_password()
+            user.first_name, user.last_name = self._get_name(full_name)
+            user.save()
+
+            google_user = GoogleUser.objects.create(
+                user=user, google_id=google_id)
+
+            UserAccount.objects.create(
+                user=user, profile_picture=profile_picture)
+
+        else:
+            google_user = user.googleuser
+
+        google_user.google_id = google_id
+        google_user.save()
+
+        user.useraccount.profile_picture = profile_picture
+        user.useraccount.save()
+
+        user_serializer = UserSerializer(user)
+        return Response(user_serializer.data, status=200)
+
+    def _get_name(self, full_name):
+        parts = full_name.split(' ')
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
+        return first_name, last_name

@@ -11,6 +11,7 @@ urlpatterns = [
     path("user-profile/", views.UserAccountView.as_view()),
     path("create-poll/", views.PollsView.as_view()),
     path("create-option/", views.OptionsView.as_view()),
+    path('login-google/', views.GoogleLoginView.as_view()),
 ]
 
 

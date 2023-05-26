@@ -37,3 +37,9 @@ class UserAccount(models.Model):
     bio = models.CharField(max_length=300, blank=True)
     following = models.ManyToManyField(
         'self', related_name='followers', symmetrical=False)
+
+
+class GoogleUser(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    google_id = models.CharField(max_length=255)
+
