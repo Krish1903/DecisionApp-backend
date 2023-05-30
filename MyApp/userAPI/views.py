@@ -207,3 +207,51 @@ class GoogleLoginView(APIView):
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
         return first_name, last_name
+
+
+class FacebookLoginView(APIView):
+    serializer_class = UserSerializer
+
+    def post(self, request):
+        email = request.data.get('email')
+        full_name = request.data.get('name')
+        profile_picture = request.data.get('picture').get('data').get('url')
+
+        try:
+            user = User.objects.get(email=email)
+            try:
+                user.useraccount.profile_picture = profile_picture
+                user.useraccount.save()
+            except User.useraccount.RelatedObjectDoesNotExist:
+                UserAccount.objects.create(
+                    user=user, profile_picture=profile_picture)
+
+        except User.DoesNotExist:
+            # Create new user and UserAccount if User does not exist
+            user = User(email=email)
+            user.username = email.split('@')[0]
+            user.set_unusable_password()
+            user.first_name, user.last_name = self._get_name(full_name)
+            user.save()
+
+            UserAccount.objects.create(
+                user=user, profile_picture=profile_picture)
+
+        except User.MultipleObjectsReturned:
+            # If there are multiple Users with the same email, log in the first one
+            user = User.objects.filter(email=email).first()
+            try:
+                user.useraccount.profile_picture = profile_picture
+                user.useraccount.save()
+            except User.useraccount.RelatedObjectDoesNotExist:
+                UserAccount.objects.create(
+                    user=user, profile_picture=profile_picture)
+
+        user_serializer = UserSerializer(user)
+        return Response(user_serializer.data, status=200)
+
+    def _get_name(self, full_name):
+        parts = full_name.split(' ')
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
+        return first_name, last_name
