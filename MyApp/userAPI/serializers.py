@@ -2,8 +2,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_jwt.settings import api_settings
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Poll, UserAccount, Option, GoogleUser
-
+from .models import Poll, UserAccount, Option
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -133,10 +132,3 @@ class OptionSerializer(serializers.ModelSerializer):
             "poll",
             "image_url",
         )
-
-
-class GoogleUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GoogleUser
-        fields = "__all__"
-

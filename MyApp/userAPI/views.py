@@ -3,12 +3,12 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, GoogleUserSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-from .models import Poll, UserAccount, Option, GoogleUser
+from .models import Poll, UserAccount, Option
 
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -190,7 +190,7 @@ class GoogleLoginView(APIView):
                 user=user, profile_picture=profile_picture)
 
         except User.MultipleObjectsReturned:
-            # If there are multiple Users with the same email, log in the first one
+            # if there are multiple Users with the same email, log in the first one
             user = User.objects.filter(email=email).first()
             try:
                 user.useraccount.profile_picture = profile_picture
@@ -227,7 +227,7 @@ class FacebookLoginView(APIView):
                     user=user, profile_picture=profile_picture)
 
         except User.DoesNotExist:
-            # Create new user and UserAccount if User does not exist
+            # create new user and UserAccount if User does not exist
             user = User(email=email)
             user.username = email.split('@')[0]
             user.set_unusable_password()
@@ -238,7 +238,7 @@ class FacebookLoginView(APIView):
                 user=user, profile_picture=profile_picture)
 
         except User.MultipleObjectsReturned:
-            # If there are multiple Users with the same email, log in the first one
+            # if there are multiple Users with the same email, log in the first one
             user = User.objects.filter(email=email).first()
             try:
                 user.useraccount.profile_picture = profile_picture
