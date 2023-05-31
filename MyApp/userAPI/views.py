@@ -193,8 +193,9 @@ class GoogleLoginView(APIView):
             # if there are multiple Users with the same email, log in the first one
             user = User.objects.filter(email=email).first()
             try:
-                user.useraccount.profile_picture = profile_picture
-                user.useraccount.save()
+                if profile_picture and not user.useraccount.profile_picture:
+                    user.useraccount.profile_picture = profile_picture
+                    user.useraccount.save()
             except User.useraccount.RelatedObjectDoesNotExist:
                 UserAccount.objects.create(
                     user=user, profile_picture=profile_picture)
@@ -241,8 +242,9 @@ class FacebookLoginView(APIView):
             # if there are multiple Users with the same email, log in the first one
             user = User.objects.filter(email=email).first()
             try:
-                user.useraccount.profile_picture = profile_picture
-                user.useraccount.save()
+                if profile_picture and not user.useraccount.profile_picture:
+                    user.useraccount.profile_picture = profile_picture
+                    user.useraccount.save()
             except User.useraccount.RelatedObjectDoesNotExist:
                 UserAccount.objects.create(
                     user=user, profile_picture=profile_picture)
