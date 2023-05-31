@@ -108,7 +108,21 @@ class UserAccountSerializer(serializers.ModelSerializer):
         return UserSerializer(obj.followers.all(), many=True).data
 
 
+class OptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Option
+        fields = (
+            "id",
+            "value",
+            "votes",
+            "image_url",
+        )
+        read_only_fields = ("votes",)
+
+
 class PollSerializer(serializers.ModelSerializer):
+    options = OptionSerializer(many=True)
+
     class Meta:
         model = Poll
         fields = (
@@ -122,13 +136,9 @@ class PollSerializer(serializers.ModelSerializer):
         )
 
 
-class OptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Option
-        fields = (
-            "id",
-            "value",
-            "votes",
-            "poll",
-            "image_url",
-        )
+    def create(self, validated_data):
+        options_data = validated_data.pop('options')
+        poll = Poll.objects.create(**validated_data)
+        for option_data in options_data:
+            Option.objects.create(poll=poll, **option_data)
+        return poll
