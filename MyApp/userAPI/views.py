@@ -116,8 +116,13 @@ class PollsView(APIView):
         poll_serializer = PollSerializer(data=poll_data)
         if poll_serializer.is_valid():
             poll_serializer.save()
-            return Response("Success", status=201)
+            return Response("success", status=201)
         return Response({"Err": poll_serializer.errors}, status=400)
+
+    def get(self, request, format=None):
+        polls = Poll.objects.all()
+        serializer = PollSerializer(polls, many=True)
+        return Response(serializer.data)
 
 
 class OptionsView(APIView):
