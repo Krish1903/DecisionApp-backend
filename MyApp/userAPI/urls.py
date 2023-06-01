@@ -10,6 +10,8 @@ urlpatterns = [
     path('login-user/', views.UserLoginView.as_view()),
     path("user-profile/", views.UserAccountView.as_view()),
     path("create-poll/", views.PollsView.as_view()),
+    path("get-polls/", views.PollsView.as_view()),
+    path("get-active-polls/", views.ActivePollsView.as_view()),
     path("create-option/", views.OptionsView.as_view()),
     path('login-google/', views.GoogleLoginView.as_view()),
     path('login-facebook/', views.FacebookLoginView.as_view(), name='login-facebook'),

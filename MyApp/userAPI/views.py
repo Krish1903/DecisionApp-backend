@@ -10,6 +10,8 @@ from django.contrib.auth import authenticate
 
 from .models import Poll, UserAccount, Option
 
+from django.utils import timezone
+
 from rest_framework.pagination import LimitOffsetPagination
 
 # Create your views here.
@@ -122,6 +124,14 @@ class PollsView(APIView):
     def get(self, request, format=None):
         polls = Poll.objects.all()
         serializer = PollSerializer(polls, many=True)
+        return Response(serializer.data)
+
+
+class ActivePollsView(APIView):
+    def get(self, request, format=None):
+        active_polls = Poll.objects.filter(
+            expires__gt=timezone.now()).order_by('expires')
+        serializer = PollSerializer(active_polls, many=True)
         return Response(serializer.data)
 
 
