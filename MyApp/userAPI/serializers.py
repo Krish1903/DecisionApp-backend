@@ -123,6 +123,7 @@ class OptionSerializer(serializers.ModelSerializer):
 class PollSerializer(serializers.ModelSerializer):
     options = OptionSerializer(many=True)
     owner_username = serializers.SerializerMethodField()
+    owner_profile_picture = serializers.SerializerMethodField()
 
     class Meta:
         model = Poll
@@ -131,6 +132,7 @@ class PollSerializer(serializers.ModelSerializer):
             "question",
             "created_at",
             "owner_username",
+            "owner_profile_picture",
             "owner",
             "expires",
             "options",
@@ -146,3 +148,8 @@ class PollSerializer(serializers.ModelSerializer):
 
     def get_owner_username(self, obj):
         return obj.owner.username
+
+    def get_owner_profile_picture(self, obj):
+        if obj.owner and obj.owner.useraccount:
+            return obj.owner.useraccount.profile_picture
+        return None
