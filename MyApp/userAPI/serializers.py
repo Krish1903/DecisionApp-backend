@@ -109,15 +109,21 @@ class UserAccountSerializer(serializers.ModelSerializer):
 
 
 class OptionSerializer(serializers.ModelSerializer):
+    votes_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Option
         fields = (
             "id",
             "value",
             "votes",
+            "votes_count",
             "image_url",
         )
         read_only_fields = ("votes",)
+
+    def get_votes_count(self, obj):
+        return obj.votes.count()
 
 
 class PollSerializer(serializers.ModelSerializer):

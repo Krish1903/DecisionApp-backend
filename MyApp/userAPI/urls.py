@@ -15,7 +15,8 @@ urlpatterns = [
     path("create-option/", views.OptionsView.as_view()),
     path('login-google/', views.GoogleLoginView.as_view()),
     path('login-facebook/', views.FacebookLoginView.as_view(), name='login-facebook'),
-
+    path('options/<uuid:option_id>/vote/',
+         views.VoteView.as_view(), name='vote'),
 ]
 
 

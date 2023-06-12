@@ -1,7 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer
 
@@ -272,3 +273,22 @@ class FacebookLoginView(APIView):
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
         return first_name, last_name
+
+
+class VoteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        option_id = kwargs.get('option_id')
+        option = get_object_or_404(Option, id=option_id)
+
+        if request.user in option.votes.all():
+            return Response({'err': 'You have already voted for this option.'}, status=400)
+
+        if request.user == option.poll.owner:
+            return Response({'err': 'You cannot vote on your own poll.'}, status=400)
+
+        option.votes.add(request.user)
+        option.save()
+
+        return Response({'update': 'Vote recorded.'}, status=200)
