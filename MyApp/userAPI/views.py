@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer
 
@@ -275,6 +276,8 @@ class FacebookLoginView(APIView):
 
 
 class VoteView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         option_id = kwargs.get('option_id')
         option = get_object_or_404(Option, id=option_id)
