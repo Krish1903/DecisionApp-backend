@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView
@@ -279,16 +280,22 @@ class VoteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        logger = logging.getLogger(__name__)
         option_id = kwargs.get('option_id')
         option = get_object_or_404(Option, id=option_id)
 
+        logger.info(f"User: {request.user.username}, Option ID: {option_id}")
+
         if request.user in option.votes.all():
+            logger.info("User has already voted for this option.")
             return Response({'err': 'You have already voted for this option.'}, status=400)
 
         if request.user == option.poll.owner:
+            logger.info("User tried to vote on their own poll.")
             return Response({'err': 'You cannot vote on your own poll.'}, status=400)
 
         option.votes.add(request.user)
         option.save()
 
+        logger.info("Vote recorded successfully.")
         return Response({'update': 'Vote recorded.'}, status=200)
