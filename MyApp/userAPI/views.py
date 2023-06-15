@@ -294,3 +294,47 @@ class VoteView(APIView):
         option.save()
 
         return Response({'update': 'Vote recorded.'}, status=200)
+
+
+class UserProfileView(APIView):
+    def get(self, request, user_id, format=None):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response("User not found", status=404)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+
+class FollowView(APIView):
+    def post(self, request, *args, **kwargs):
+        follower_id = request.data.get('follower_id')
+        following_id = request.data.get('following_id')
+
+        try:
+            follower = UserAccount.objects.get(id=follower_id)
+            following = UserAccount.objects.get(id=following_id)
+        except UserAccount.DoesNotExist:
+            return Response({"msg": "User does not exist"}, status=404)
+
+        follower.following.add(following)
+        follower.save()
+
+        return Response({"msg": "success"}, status=200)
+
+
+class UnfollowView(APIView):
+    def post(self, request, *args, **kwargs):
+        unfollower_id = request.data.get('unfollower_id')
+        unfollowing_id = request.data.get('unfollowing_id')
+
+        try:
+            follower = UserAccount.objects.get(id=unfollower_id)
+            following = UserAccount.objects.get(id=unfollowing_id)
+        except UserAccount.DoesNotExist:
+            return Response({"msg": "User does not exist"}, status=404)
+
+        follower.following.remove(following)
+        follower.save()
+
+        return Response({"msg": "success"}, status=200)

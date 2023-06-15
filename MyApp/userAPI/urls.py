@@ -17,6 +17,9 @@ urlpatterns = [
     path('login-facebook/', views.FacebookLoginView.as_view(), name='login-facebook'),
     path('options/<uuid:option_id>/vote/',
          views.VoteView.as_view(), name='vote'),
+    path("get-user-profile/<int:user_id>/", views.UserProfileView.as_view()),
+    path('follow/', views.FollowView.as_view(), name='follow'),
+    path('unfollow/', views.UnfollowView.as_view(), name='unfollow'),
 ]
 
 
