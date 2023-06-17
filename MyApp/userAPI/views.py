@@ -58,6 +58,7 @@ class UserLoginView(APIView):
             return Response("Invalid Credentials", status=403)
 
         user = UserSerializer(request.user)
+
         return Response(user.data, status=200)
 
     def post(self, request, format=None):
