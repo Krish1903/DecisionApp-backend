@@ -57,7 +57,7 @@ class UserLoginView(APIView):
         if request.user.is_authenticated == False or request.user.is_active == False:
             return Response("Invalid Credentials", status=403)
 
-        user = UserSerializer(request.user)
+        user = UserSerializer(user)
 
         return Response(user.data, status=200)
 
