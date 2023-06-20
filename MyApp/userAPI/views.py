@@ -54,12 +54,11 @@ class UserLoginView(APIView):
     # Convert a user token into user data
     def get(self, request, format=None):
 
-        if request.user.is_authenticated == False or request.user.is_active == False:
+        if not request.user.is_authenticated or not request.user.is_active:
             return Response("Invalid Credentials", status=403)
 
-        user = UserSerializer(user)
-
-        return Response(user.data, status=200)
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
 
     def post(self, request, format=None):
         print("Login Class")
