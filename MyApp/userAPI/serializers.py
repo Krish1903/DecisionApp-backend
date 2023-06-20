@@ -170,7 +170,7 @@ class PollSerializer(serializers.ModelSerializer):
         return poll
 
     def get_owner_username(self, obj):
-        return obj.owner.useraccount.username
+        return obj.owner.username
 
     def get_owner_profile_picture(self, obj):
         if obj.owner and obj.owner.useraccount:
