@@ -312,13 +312,15 @@ class FollowView(APIView):
         following_id = request.data.get('following_id')
 
         try:
-            follower = UserAccount.objects.get(id=follower_id)
-            following = UserAccount.objects.get(id=following_id)
-        except UserAccount.DoesNotExist:
+            follower = User.objects.get(id=follower_id)
+            following = User.objects.get(id=following_id)
+        except User.DoesNotExist:
             return Response({"msg": "User does not exist"}, status=404)
 
-        follower.following.add(following)
-        follower.save()
+        follower.useraccount.following.add(following.useraccount)
+        follower.useraccount.save()
+
+        serializer = UserSerializer(follower)
 
         return Response({"msg": "success"}, status=200)
 
@@ -329,12 +331,14 @@ class UnfollowView(APIView):
         unfollowing_id = request.data.get('unfollowing_id')
 
         try:
-            follower = UserAccount.objects.get(id=unfollower_id)
-            following = UserAccount.objects.get(id=unfollowing_id)
-        except UserAccount.DoesNotExist:
+            follower = User.objects.get(id=unfollower_id)
+            following = User.objects.get(id=unfollowing_id)
+        except User.DoesNotExist:
             return Response({"msg": "User does not exist"}, status=404)
 
-        follower.following.remove(following)
-        follower.save()
+        follower.useraccount.following.remove(following.useraccount)
+        follower.useraccount.save()
+
+        serializer = UserSerializer(follower)
 
         return Response({"msg": "success"}, status=200)

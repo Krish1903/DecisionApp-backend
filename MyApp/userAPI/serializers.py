@@ -86,10 +86,10 @@ class UserSerializer(serializers.ModelSerializer):
         return first_name, last_name
 
     def get_following(self, obj):
-        return UserFollowSerializer(obj.useraccount.following.all(), many=True).data
+        return [useraccount.user.id for useraccount in obj.useraccount.following.all()]
 
     def get_followers(self, obj):
-        return UserFollowSerializer(obj.useraccount.followers.all(), many=True).data
+        return [useraccount.user.id for useraccount in obj.useraccount.followers.all()]
 
 
 class UserAccountSerializer(serializers.ModelSerializer):
@@ -105,23 +105,8 @@ class UserAccountSerializer(serializers.ModelSerializer):
             "created_at",
             "profile_picture",
             "bio",
-            "following",
-            "followers",
-        )
-
-    def get_following(self, obj):
-        return UserFollowSerializer(obj.following.all(), many=True).data
-
-    def get_followers(self, obj):
-        return UserFollowSerializer(obj.followers.all(), many=True).data
-
-
-class UserFollowSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email'
+            "email",
+            "username"
         )
 
 
