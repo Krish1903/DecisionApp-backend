@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -342,3 +342,13 @@ class UnfollowView(APIView):
         serializer = UserSerializer(follower)
 
         return Response({"msg": "success"}, status=200)
+
+
+class GetFriendsView(APIView):
+    def get(self, request, ids, format=None):
+        ids_list = ids.split(',')
+
+        users = User.objects.filter(id__in=ids_list)
+        serializer = FriendsSerializer(users, many=True)
+
+        return Response(serializer.data, status=200)

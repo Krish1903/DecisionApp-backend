@@ -20,6 +20,9 @@ urlpatterns = [
     path("get-user-profile/<int:user_id>/", views.UserProfileView.as_view()),
     path('follow/', views.FollowView.as_view(), name='follow'),
     path('unfollow/', views.UnfollowView.as_view(), name='unfollow'),
+    path('get-friends/<str:ids>/',
+         views.GetFriendsView.as_view()),
+
 ]
 
 

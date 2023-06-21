@@ -161,3 +161,16 @@ class PollSerializer(serializers.ModelSerializer):
         if obj.owner and obj.owner.useraccount:
             return obj.owner.useraccount.profile_picture
         return None
+
+
+class FriendsSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.URLField(
+        source='useraccount.profile_picture', required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'profile_picture'
+        ]
