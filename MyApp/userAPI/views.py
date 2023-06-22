@@ -352,3 +352,50 @@ class GetFriendsView(APIView):
         serializer = FriendsSerializer(users, many=True)
 
         return Response(serializer.data, status=200)
+
+
+class ActivePollsFromFollowedUsersView(APIView):
+    def get(self, request, user_id, format=None):
+        try:
+            user_account = UserAccount.objects.get(user__id=user_id)
+        except UserAccount.DoesNotExist:
+            raise NotFound("User not found.")
+
+        followed_users = [ua.user for ua in user_account.following.all()]
+
+        active_polls = Poll.objects.filter(
+            owner__in=followed_users,
+            expires__gt=timezone.now()
+        ).order_by('expires')
+
+        serializer = PollSerializer(active_polls, many=True)
+        return Response(serializer.data)
+
+
+class ActivePollsFromNonFollowedUsersView(APIView):
+    def get(self, request, user_id, format=None):
+        try:
+            user_account = UserAccount.objects.get(user__id=user_id)
+        except UserAccount.DoesNotExist:
+            raise NotFound("User not found.")
+
+        followed_users = [ua.user for ua in user_account.following.all()]
+
+        active_polls = Poll.objects.exclude(
+            owner__in=followed_users
+        ).filter(
+            expires__gt=timezone.now()
+        ).order_by('expires')
+
+        serializer = PollSerializer(active_polls, many=True)
+        return Response(serializer.data)
+
+
+class UserPollsView(APIView):
+    def get(self, request, user_id, format=None):
+        user = get_object_or_404(User, id=user_id)
+
+        user_polls = Poll.objects.filter(owner=user)
+
+        serializer = PollSerializer(user_polls, many=True)
+        return Response(serializer.data)

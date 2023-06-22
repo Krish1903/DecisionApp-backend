@@ -22,6 +22,11 @@ urlpatterns = [
     path('unfollow/', views.UnfollowView.as_view(), name='unfollow'),
     path('get-friends/<str:ids>/',
          views.GetFriendsView.as_view()),
+    path('active-polls/followed/<int:user_id>/',
+         views.ActivePollsFromFollowedUsersView.as_view()),
+    path('active-polls/non-followed/<int:user_id>/',
+         views.ActivePollsFromNonFollowedUsersView.as_view()),
+    path('user-polls/<int:user_id>/', views.UserPollsView.as_view()),
 
 ]
 
