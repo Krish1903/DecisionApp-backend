@@ -359,9 +359,10 @@ class ActivePollsFromFollowedUsersView(APIView):
         try:
             user_account = UserAccount.objects.get(user__id=user_id)
         except UserAccount.DoesNotExist:
-            raise NotFound("User not found.")
+            return Response("User not found.")
 
-        followed_users = [ua.user for ua in user_account.following.all()]
+        followed_users = [
+            ua.user for ua in user_account.following.all() if ua.user != user_account.user]
 
         active_polls = Poll.objects.filter(
             owner__in=followed_users,
@@ -377,14 +378,16 @@ class ActivePollsFromNonFollowedUsersView(APIView):
         try:
             user_account = UserAccount.objects.get(user__id=user_id)
         except UserAccount.DoesNotExist:
-            raise NotFound("User not found.")
+            return Response("User not found.")
 
         followed_users = [ua.user for ua in user_account.following.all()]
 
-        active_polls = Poll.objects.exclude(
-            owner__in=followed_users
-        ).filter(
+        active_polls = Poll.objects.filter(
             expires__gt=timezone.now()
+        ).exclude(
+            owner__in=followed_users
+        ).exclude(
+            owner=user_account.user
         ).order_by('expires')
 
         serializer = PollSerializer(active_polls, many=True)
