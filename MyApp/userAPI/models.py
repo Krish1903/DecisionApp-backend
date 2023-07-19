@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from exponent_server_sdk import PushClient, PushMessage
 
 import uuid
 
@@ -31,6 +32,7 @@ class Option(models.Model):
 
 class UserAccount(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    expo_push_token = models.JSONField(default=list, blank=True)
     interacted_polls = models.ManyToManyField(
         Poll, related_name='interacted_users')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -47,3 +49,10 @@ class UserAccount(models.Model):
     @receiver(post_save, sender=User)
     def save_user_profile(sender, instance, **kwargs):
         instance.useraccount.save()
+
+    def notify_new_follower(self, follower_username):
+        for token in self.expo_token:
+            message = PushMessage(
+                to=token, 
+                body=f'You have been followed by {follower_username}!')
+            response = PushClient().publish(message)

@@ -8,6 +8,7 @@ from .models import Poll, UserAccount, Option
 class UserSerializer(serializers.ModelSerializer):
     following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
+    expo_push_token = serializers.JSONField(required=False, write_only=True)
 
     full_name = serializers.CharField(write_only=True)
     token = serializers.SerializerMethodField()
@@ -46,12 +47,14 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             "following",
             "followers",
+            "expo_push_token",
         ]
         extra_kwargs = {
             'password': {'write_only': True}
         }
 
     def create(self, validated_data):
+        expo_push_token = validated_data.pop('expo_push_token', None)
         password = validated_data.pop('password', None)
         full_name = validated_data.pop('full_name', None)
         if full_name:
@@ -62,6 +65,13 @@ class UserSerializer(serializers.ModelSerializer):
         if password is not None:
             user.set_password(password)
         user.save()
+
+        # If an expo_push_token is provided, save it to the user's UserAccount
+        if expo_push_token is not None:
+            user_account = UserAccount.objects.get(user=user)
+            user_account.expo_push_token = expo_push_token
+            user_account.save()
+
         return user
 
     def to_internal_value(self, data):
@@ -96,6 +106,7 @@ class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
+    expo_push_token = serializers.JSONField(source='useraccount.expo_push_token', required=False)
 
     class Meta:
         model = UserAccount
@@ -106,7 +117,8 @@ class UserAccountSerializer(serializers.ModelSerializer):
             "profile_picture",
             "bio",
             "email",
-            "username"
+            "username",
+            "expo_push_token",
         )
 
 

@@ -1,3 +1,5 @@
+from exponent_server_sdk import DeviceNotRegisteredError, PushClient, PushMessage, PushServerError, PushTicketError
+
 from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView
@@ -15,8 +17,17 @@ from django.utils import timezone
 
 from rest_framework.pagination import LimitOffsetPagination
 
+from exponent_server_sdk import DeviceNotRegisteredError, PushClient, PushMessage
+
+from requests.exceptions import ConnectionError, HTTPError
+
+
 # Create your views here.
 
+
+class TestPushNotifications(APIView):
+    def post(self, request, format=None):
+        return Response("Hi")
 
 class TestView(APIView):
     # getting information from the server
@@ -73,9 +84,15 @@ class UserLoginView(APIView):
             }
             user = authenticate(**credentials)
 
-            if user and user.is_active:
-                user_serializer = UserSerializer(user)
-                return Response(user_serializer.data, status=200)
+        if user and user.is_active:
+            # Check if the token is the same
+            expo_token = request.data.get('expo_token')
+            if expo_token and expo_token not in user.useraccount.expo_token:
+                user.useraccount.expo_token.append(expo_token)
+                user.useraccount.save()
+
+            user_serializer = UserSerializer(user)
+            return Response(user_serializer.data, status=200)
 
         return Response("Invalid Credentials", status=403)
 
@@ -119,7 +136,23 @@ class PollsView(APIView):
         poll_serializer = PollSerializer(data=poll_data)
         if poll_serializer.is_valid():
             poll_serializer.save()
+            
+            # Access the poll instance that has been saved.
+            poll = poll_serializer.instance
+            followers = poll.owner.useraccount.followers.all()
+
+            push_client = PushClient()
+            message_body = f"A new poll has been created by {poll.owner.username}!"
+
+            for follower in followers:
+                if follower.expo_push_token:
+                    try:
+                        push_client.publish(PushMessage(to=follower.expo_push_token, body=message_body))
+                    except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
+                        print(e)
+
             return Response("success", status=201)
+
         return Response({"Err": poll_serializer.errors}, status=400)
 
     def get(self, request, format=None):
@@ -320,9 +353,20 @@ class FollowView(APIView):
         follower.useraccount.following.add(following.useraccount)
         follower.useraccount.save()
 
+        # Send a notification to the followed user
+        if following.useraccount.expo_push_token:
+            push_client = PushClient()
+            message_body = f"{follower.username} has started following you!"
+
+            try:
+                push_client.publish(PushMessage(to=following.useraccount.expo_push_token, body=message_body))
+            except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
+                print(e)
+
         serializer = UserSerializer(follower)
 
         return Response({"msg": "success"}, status=200)
+
 
 
 class UnfollowView(APIView):
