@@ -340,7 +340,6 @@ class VoteView(APIView):
                 push_client.publish(PushMessage(
                     to=poll.owner.useraccount.expo_push_token, 
                     body=message_body,
-                    data={"type": "vote", "poll_id": poll.id}
                 ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
