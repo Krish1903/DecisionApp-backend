@@ -503,12 +503,10 @@ class NotificationView(APIView):
 class MarkAsReadView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        notification_id = request.data.get('notification_id')
-        try:
-            notification = Notification.objects.get(id=notification_id, user=request.user)
-            notification.mark_as_read()
-            serializer = NotificationSerializer(notification, many=True)
-            return Response(serializer.data, status=200)
-        except Notification.DoesNotExist:
-            return Response({"err": "Notification does not exist"}, status=400)
+    def post(self, request, *args, **kwargs):        
+        Notification.objects.filter(user=request.user, read=False).update(read=True)
+        notifications = Notification.objects.filter(user=request.user)
+        
+        serializer = NotificationSerializer(notifications, many=True)
+
+        return Response(serializer.data, status=200)
