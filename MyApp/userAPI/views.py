@@ -329,10 +329,12 @@ class VoteView(APIView):
         if request.user == poll.owner:
             return Response({'err': 'You cannot vote on your own poll.'}, status=400)
 
-        option.votes.add(request.user)
-        option.save()
+        poll_serializer = PollSerializer(poll)
 
-        return Response({'update': 'Vote recorded.'}, status=200)
+        return Response({
+            'update': 'Vote recorded.',
+            'poll': poll_serializer.data
+        }, status=200)
 
 
 class UserProfileView(APIView):
