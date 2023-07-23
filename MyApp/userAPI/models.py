@@ -66,5 +66,9 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=200)  # Could be 'follower' or 'vote'
     source_id = models.CharField(max_length=200)  # id of the user who followed or the poll voted on
 
+    def mark_as_read(self):
+        self.read = True
+        self.save()
+        
     class Meta:
         ordering = ['-created_at']

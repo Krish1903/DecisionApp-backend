@@ -32,6 +32,7 @@ urlpatterns = [
     path('notify-poll-creation/', views.PollsView.as_view),
     path('single-poll/<str:id>/', views.SinglePollView.as_view()),
     path('notifications/', views.NotificationView.as_view()),
+    path('notifications/read/', views.MarkAsReadView.as_view()),
 
 ]
 

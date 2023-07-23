@@ -497,10 +497,18 @@ class NotificationView(APIView):
 
     def get(self, request, *args, **kwargs):
         notifications = Notification.objects.filter(user=request.user)
-        for notification in notifications:
-            if not notification.read:
-                notification.read = True
-                notification.save()
-
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data)
+
+class MarkAsReadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        notification_id = request.data.get('notification_id')
+        try:
+            notification = Notification.objects.get(id=notification_id, user=request.user)
+            notification.mark_as_read()
+            serializer = NotificationSerializer(notification, many=True)
+            return Response(serializer.data, status=200)
+        except Notification.DoesNotExist:
+            return Response({"err": "Notification not found or does not belong to the user"}, status=400)
