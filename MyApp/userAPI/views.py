@@ -332,10 +332,10 @@ class VoteView(APIView):
         option.votes.add(request.user)
         option.save()
 
-        # Send a push notification to the poll owner
+        message_body = f"{request.user.username} voted on your poll!"
+
         if poll.owner.useraccount.expo_push_token:
             push_client = PushClient()
-            message_body = f"{request.user.username} voted on your poll!"
             try:
                 push_client.publish(PushMessage(
                     to=poll.owner.useraccount.expo_push_token, 
@@ -344,16 +344,16 @@ class VoteView(APIView):
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
 
-            # Create a Notification instance for the poll owner
-            notification = Notification(
-                owner=poll.owner.useraccount,
-                message=message_body,
-                notification_type="vote",
-                related_id=poll.id,
-                created_at=timezone.now(),
-                is_read=False
-            )
-            notification.save()
+        # Create a notification for the owner of the poll
+        notification = Notification(
+            user=poll.owner.useraccount,
+            message=message_body,
+            notification_type="vote",
+            source_id=str(poll.id),
+            created_at=timezone.now(),
+            read=False
+        )
+        notification.save()
 
         poll_serializer = PollSerializer(poll)
 
@@ -397,10 +397,10 @@ class FollowView(APIView):
 
         # Create a new Notification object
         notification = Notification(
-            owner=following.useraccount,
+            user=following.useraccount,
             message=message_body,
             notification_type="follow",
-            related_id=follower.id,
+            source_id=follower.id,
             created_at=timezone.now(),
             is_read=False
         )
