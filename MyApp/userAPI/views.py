@@ -168,6 +168,12 @@ class ActivePollsView(APIView):
         serializer = PollSerializer(active_polls, many=True)
         return Response(serializer.data)
 
+class SinglePollView(APIView):
+    def get(self, request, *args, **kwargs):
+        poll_id = kwargs.get('id') 
+        poll = get_object_or_404(Poll, id=poll_id)
+        serializer = PollSerializer(poll)
+        return Response(serializer.data)
 
 class OptionsView(APIView):
     def post(self, request, format=None):
