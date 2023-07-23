@@ -331,21 +331,27 @@ class VoteView(APIView):
 
         option.votes.add(request.user)
         option.save()
-        
-        push_client = PushClient()
-        message_body = f"{request.user.username} voted on your poll!"
 
+        notification = Notification.objects.create(
+            user=poll.owner,
+            notification_type='VOTE',
+            message=f"Your poll was voted on by {request.user.username}",
+            data={'poll_id': poll.id}
+        )
+
+        # send push notification
         if poll.owner.expo_push_token:
+            push_client = PushClient()
             try:
                 push_client.publish(PushMessage(
-                    to=poll.owner.expo_push_token, 
-                    body=message_body,
+                    to=poll.owner.expo_push_token,
+                    body=notification.message,
+                    data=notification.data
                 ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
 
         poll_serializer = PollSerializer(poll)
-
         return Response(poll_serializer.data, status=200)
 
 
@@ -373,13 +379,22 @@ class FollowView(APIView):
         follower.useraccount.following.add(following.useraccount)
         follower.useraccount.save()
 
-        # Send a notification to the followed user
-        if following.useraccount.expo_push_token:
-            push_client = PushClient()
-            message_body = f"{follower.username} has started following you!"
+        notification = Notification.objects.create(
+            user=following,
+            notification_type='FOLLOW',
+            message=f"You are now followed by {follower.username}",
+            data={'follower_id': follower.id}
+        )
 
+        # send push notification
+        if following.expo_push_token:
+            push_client = PushClient()
             try:
-                push_client.publish(PushMessage(to=following.useraccount.expo_push_token, body=message_body))
+                push_client.publish(PushMessage(
+                    to=following.expo_push_token,
+                    body=notification.message,
+                    data=notification.data
+                ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
 
