@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "userAPI",
-    "django_heroku",
     ]
 
 MIDDLEWARE = [
