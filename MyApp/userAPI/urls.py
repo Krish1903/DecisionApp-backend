@@ -31,6 +31,8 @@ urlpatterns = [
     path('nofity-follow-user/', views.FollowView.as_view()),
     path('notify-poll-creation/', views.PollsView.as_view),
     path('single-poll/<str:id>/', views.SinglePollView.as_view()),
+    path('notifications/', views.NotificationView.as_view()),
+
 ]
 
 

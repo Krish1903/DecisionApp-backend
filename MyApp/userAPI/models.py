@@ -56,3 +56,15 @@ class UserAccount(models.Model):
                 to=token, 
                 body=f'You have been followed by {follower_username}!')
             response = PushClient().publish(message)
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=200)
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    notification_type = models.CharField(max_length=200)  # Could be 'follower' or 'vote'
+    source_id = models.CharField(max_length=200)  # id of the user who followed or the poll voted on
+
+    class Meta:
+        ordering = ['-created_at']

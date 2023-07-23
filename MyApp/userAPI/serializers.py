@@ -2,7 +2,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_jwt.settings import api_settings
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Poll, UserAccount, Option
+from .models import Poll, UserAccount, Option, Notification
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -186,3 +186,8 @@ class FriendsSerializer(serializers.ModelSerializer):
             'username',
             'profile_picture'
         ]
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'

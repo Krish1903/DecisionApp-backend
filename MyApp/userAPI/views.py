@@ -1,4 +1,4 @@
-from exponent_server_sdk import DeviceNotRegisteredError, PushClient, PushMessage, PushServerError, PushTicketError
+from exponent_server_sdk import DeviceNotRegisteredError, PushClient, PushMessage, PushServerError
 
 from django.shortcuts import get_object_or_404
 
@@ -6,12 +6,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer, NotificationSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-from .models import Poll, UserAccount, Option
+from .models import Poll, UserAccount, Option, Notification
 
 from django.utils import timezone
 
@@ -332,6 +332,18 @@ class VoteView(APIView):
         option.votes.add(request.user)
         option.save()
         
+        push_client = PushClient()
+        message_body = f"{request.user.username} voted on your poll!"
+
+        if poll.owner.expo_push_token:
+            try:
+                push_client.publish(PushMessage(
+                    to=poll.owner.expo_push_token, 
+                    body=message_body,
+                ))
+            except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
+                print(e)
+
         poll_serializer = PollSerializer(poll)
 
         return Response(poll_serializer.data, status=200)
@@ -453,4 +465,17 @@ class UserPollsView(APIView):
         user_polls = Poll.objects.filter(owner=user)
 
         serializer = PollSerializer(user_polls, many=True)
+        return Response(serializer.data)
+
+class NotificationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        notifications = Notification.objects.filter(user=request.user)
+        for notification in notifications:
+            if not notification.read:
+                notification.read = True
+                notification.save()
+
+        serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data)
