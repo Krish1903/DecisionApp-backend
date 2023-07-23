@@ -331,7 +331,7 @@ class VoteView(APIView):
 
         poll_serializer = PollSerializer(poll)
 
-        return Response({poll_serializer.data}, status=200)
+        return Response(poll_serializer.data, status=200)
 
 
 class UserProfileView(APIView):
