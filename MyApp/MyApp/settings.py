@@ -43,8 +43,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
-    "userAPI"
-]
+    "userAPI",
+    "django_heroku",
+    ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
