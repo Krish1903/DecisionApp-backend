@@ -336,7 +336,6 @@ class VoteView(APIView):
             user=poll.owner,
             notification_type='VOTE',
             message=f"Your poll was voted on by {request.user.username}",
-            data={'poll_id': poll.id}
         )
 
         # send push notification
@@ -382,8 +381,7 @@ class FollowView(APIView):
         notification = Notification.objects.create(
             user=following,
             notification_type='FOLLOW',
-            message=f"You are now followed by {follower.username}",
-            data={'follower_id': follower.id}
+            message=f"You are now followed by {follower.username}"
         )
 
         # send push notification
