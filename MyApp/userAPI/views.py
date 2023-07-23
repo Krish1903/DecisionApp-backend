@@ -385,24 +385,26 @@ class FollowView(APIView):
         follower.useraccount.following.add(following.useraccount)
         follower.useraccount.save()
 
-        # Send a notification to the followed user
+        message_body = f"{follower.username} has started following you!"
+
         if following.useraccount.expo_push_token:
             push_client = PushClient()
-            message_body = f"{follower.username} has started following you!"
-
             try:
-                push_client.publish(PushMessage(to=following.useraccount.expo_push_token, body=message_body, data={"type": "follow", "follower_id": follower.id}))
+                push_client.publish(PushMessage(
+                    to=following.useraccount.expo_push_token, 
+                    body=message_body,
+                ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
 
-        # Create a new Notification object
+        # Create a notification for the followed user
         notification = Notification(
             user=following.useraccount,
             message=message_body,
             notification_type="follow",
-            source_id=follower.id,
+            source_id=str(follower.id),
             created_at=timezone.now(),
-            is_read=False
+            read=False
         )
         notification.save()
 
