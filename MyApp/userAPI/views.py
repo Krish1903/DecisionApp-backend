@@ -340,12 +340,10 @@ class VoteView(APIView):
                 push_client.publish(PushMessage(
                     to=poll.owner.expo_push_token, 
                     body=message_body,
-                    data={"type": "vote", "poll_id": poll.id}
                 ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
 
-        # Create a new Notification object
         notification = Notification(
             owner=poll.owner.useraccount,
             message=message_body,
@@ -355,11 +353,10 @@ class VoteView(APIView):
             is_read=False
         )
         notification.save()
-
+        
         poll_serializer = PollSerializer(poll)
 
         return Response(poll_serializer.data, status=200)
-
 
 
 class UserProfileView(APIView):
