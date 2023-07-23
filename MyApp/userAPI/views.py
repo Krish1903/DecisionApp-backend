@@ -331,27 +331,35 @@ class VoteView(APIView):
 
         option.votes.add(request.user)
         option.save()
+        
+        push_client = PushClient()
+        message_body = f"{request.user.username} voted on your poll!"
 
-        notification = Notification.objects.create(
-            user=poll.owner,
-            notification_type='VOTE',
-            message=f"Your poll was voted on by {request.user.username}",
-        )
-
-        # send push notification
         if poll.owner.expo_push_token:
-            push_client = PushClient()
             try:
                 push_client.publish(PushMessage(
-                    to=poll.owner.expo_push_token,
-                    body=notification.message,
-                    data=notification.data
+                    to=poll.owner.expo_push_token, 
+                    body=message_body,
+                    data={"type": "vote", "poll_id": poll.id}
                 ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
 
+        # Create a new Notification object
+        notification = Notification(
+            owner=poll.owner.useraccount,
+            message=message_body,
+            notification_type="vote",
+            related_id=poll.id,
+            created_at=timezone.now(),
+            is_read=False
+        )
+        notification.save()
+
         poll_serializer = PollSerializer(poll)
+
         return Response(poll_serializer.data, status=200)
+
 
 
 class UserProfileView(APIView):
@@ -378,23 +386,26 @@ class FollowView(APIView):
         follower.useraccount.following.add(following.useraccount)
         follower.useraccount.save()
 
-        notification = Notification.objects.create(
-            user=following,
-            notification_type='FOLLOW',
-            message=f"You are now followed by {follower.username}"
-        )
-
-        # send push notification
-        if following.expo_push_token:
+        # Send a notification to the followed user
+        if following.useraccount.expo_push_token:
             push_client = PushClient()
+            message_body = f"{follower.username} has started following you!"
+
             try:
-                push_client.publish(PushMessage(
-                    to=following.expo_push_token,
-                    body=notification.message,
-                    data=notification.data
-                ))
+                push_client.publish(PushMessage(to=following.useraccount.expo_push_token, body=message_body, data={"type": "follow", "follower_id": follower.id}))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
+
+        # Create a new Notification object
+        notification = Notification(
+            owner=following.useraccount,
+            message=message_body,
+            notification_type="follow",
+            related_id=follower.id,
+            created_at=timezone.now(),
+            is_read=False
+        )
+        notification.save()
 
         serializer = UserSerializer(follower)
 
