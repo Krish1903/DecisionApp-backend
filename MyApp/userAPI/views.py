@@ -346,7 +346,7 @@ class VoteView(APIView):
 
         # Create a notification for the owner of the poll
         notification = Notification(
-            user=poll.owner.useraccount,
+            user=poll.owner,  
             message=message_body,
             notification_type="vote",
             source_id=str(poll.id),
