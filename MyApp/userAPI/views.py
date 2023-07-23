@@ -511,4 +511,4 @@ class MarkAsReadView(APIView):
             serializer = NotificationSerializer(notification, many=True)
             return Response(serializer.data, status=200)
         except Notification.DoesNotExist:
-            return Response({"err": "Notification not found or does not belong to the user"}, status=400)
+            return Response({"err": "Notification does not exist"}, status=400)
