@@ -30,7 +30,7 @@ SECRET_KEY = "django-insecure-n3o8eu+u(21$1plcx2ren^zx#+8h6%*7pzzy-qbs=jd5e-w1e_
 DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1',
-                 '172.25.170.35', '192.168.1.226', '192.168.1.163', '10.0.0.182', '192.168.1.8', '192.168.1.70' 'decision-app-d36dbab3b0ee.herokuapp.com']
+                 '172.25.170.35', '192.168.1.226', '192.168.1.163', '10.0.0.182', '192.168.1.8', '192.168.1.70', 'decision-app-d36dbab3b0ee.herokuapp.com', '*']
 
 
 # Application definition
@@ -83,13 +83,13 @@ WSGI_APPLICATION = "MyApp.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('postgres://bpmkwtlyllphcl:5b9c69295be199ed18b5204c051ada7a98a935ec22dc7628f3bfa428b1806ced@ec2-3-234-204-26.compute-1.amazonaws.com:5432/d21udec00gm89a')
-    )
-}
-
-
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        }
+    }
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -118,8 +118,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
@@ -154,3 +155,4 @@ JWT_AUTH = {
 }
 
 django_heroku.settings(locals())
+

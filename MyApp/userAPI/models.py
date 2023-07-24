@@ -69,6 +69,6 @@ class Notification(models.Model):
     def mark_as_read(self):
         self.read = True
         self.save()
-        
+
     class Meta:
         ordering = ['-created_at']
