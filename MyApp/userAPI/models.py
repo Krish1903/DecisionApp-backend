@@ -12,7 +12,7 @@ import uuid
 
 
 class Poll(models.Model):
-    newid = models.UUIDField(default=uuid.uuid4, unique=True)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)    
     question = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(
