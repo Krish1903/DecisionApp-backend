@@ -86,9 +86,9 @@ class UserLoginView(APIView):
 
         if user and user.is_active:
             # Check if the token is the same
-            expo_token = request.data.get('expo_token')
-            if expo_token and expo_token not in user.useraccount.expo_token:
-                user.useraccount.expo_token.append(expo_token)
+            expo_push_token = request.data.get('expo_push_token')
+            if expo_push_token and expo_push_token not in user.useraccount.expo_push_token:
+                user.useraccount.expo_push_token.append(expo_push_token)
                 user.useraccount.save()
 
             user_serializer = UserSerializer(user)
