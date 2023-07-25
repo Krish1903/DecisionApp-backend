@@ -1,1 +1,1 @@
-gunicorn MyApp.MyApp.wsgi --env DJANGO_SETTINGS_MODULE=MyApp.settings
+web: gunicorn MyApp.wsgi --log-file - --env DJANGO_SETTINGS_MODULE=MyApp.settings
