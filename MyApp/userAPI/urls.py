@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib import admin
 from . import views
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path("test", views.TestView.as_view()),
@@ -36,6 +37,7 @@ urlpatterns = [
 
 ]
 
+urlpatterns += staticfiles_urlpatterns()
 
 # access each view
 # localhost:8000/api/v1.0/user/"..."
