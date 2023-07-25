@@ -1,1 +1,0 @@
-gunicorn MyApp.MyApp.wsgi --env DJANGO_SETTINGS_MODULE=MyApp.settings
