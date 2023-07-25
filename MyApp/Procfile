@@ -1,1 +1,1 @@
-web: echo Hello, Heroku
+web: gunicorn MyApp.wsgi --log-file -
