@@ -18,7 +18,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('', include("userAPI.urls"))
+    path('api/v1.0/user/', include("userAPI.urls"))
 ]
 
 # localhost:8000
