@@ -399,7 +399,7 @@ class FollowView(APIView):
 
         # Create a notification for the followed user
         notification = Notification(
-            user=following.useraccount,
+            user=following,
             message=message_body,
             notification_type="follow",
             source_id=str(follower.id),
