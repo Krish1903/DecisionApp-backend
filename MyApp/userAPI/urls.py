@@ -34,7 +34,7 @@ urlpatterns = [
     path('single-poll/<str:id>/', views.SinglePollView.as_view()),
     path('notifications/', views.NotificationView.as_view()),
     path('notifications/read/', views.MarkAsReadView.as_view()),
-    path('voted_polls/', views.VotedPollsView.as_view()),
+    path('voted_polls/<int:user_id>/', views.VotedPollsView.as_view()),
 
 ]
 

@@ -512,13 +512,14 @@ class MarkAsReadView(APIView):
         return Response(serializer.data, status=200)
 
 class VotedPollsView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, *args, **kwargs):
-        voted_options = Option.objects.filter(votes=request.user)
-        
-        voted_polls = Poll.objects.filter(options__in=voted_options).exclude(owner=request.user)
+        user_id = kwargs.get('user_id')
+        user = get_object_or_404(User, id=user_id)
 
-        serializer = PollSerializer(voted_polls, many=True)
+        polls = Poll.objects.filter(
+            options__votes__in=[user]
+        ).exclude(owner=user).distinct()
 
-        return Response(serializer.data)
+        serializer = PollSerializer(polls, many=True)
+
+        return Response(serializer.data, status=200)
