@@ -191,3 +191,16 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
+
+class UserAccountFriendsSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='user.id')
+    username = serializers.CharField(source='user.username')
+    profile_picture = serializers.URLField(source='profile_picture')
+
+    class Meta:
+        model = UserAccount
+        fields = [
+            'id',
+            'username',
+            'profile_picture'
+        ]

@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer, NotificationSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer, NotificationSerializer, UserAccountFriendsSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -443,29 +443,27 @@ class GetFriendsView(APIView):
         return Response(serializer.data, status=200)
 
 class GetFollowers(APIView):
-    def get(self, request, user_id, formate=None):
-
+    def get(self, request, user_id, format=None):
         try: 
             user = get_object_or_404(User, id=user_id)
         except User.DoesNotExist:
             return Response("User not found.")
 
-        followers = user.useraccount.followers.all() 
-        serializer = FriendsSerializer(followers, many=True)
+        followers = user.useraccount.followers.all()
+        serializer = UserAccountFriendsSerializer(followers, many=True)
 
         return Response(serializer.data, status=200)
 
 
 class GetFollowing(APIView):
-    def get(self, request, user_id, formate=None):
-
+    def get(self, request, user_id, format=None):
         try: 
             user = get_object_or_404(User, id=user_id)
-        except UserAccount.DoesNotExist:
+        except User.DoesNotExist:
             return Response("User not found.")
 
         following = user.useraccount.following.all()
-        serializer = FriendsSerializer(following, many=True)
+        serializer = UserAccountFriendsSerializer(following, many=True)
 
         return Response(serializer.data, status=200)
         
