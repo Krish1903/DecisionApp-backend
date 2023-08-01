@@ -23,6 +23,8 @@ urlpatterns = [
     path('unfollow/', views.UnfollowView.as_view(), name='unfollow'),
     path('get-friends/<str:ids>/',
          views.GetFriendsView.as_view()),
+    path('get-followers/<int:user_id>/', views.GetFollowers.as_view()),
+    path('get-following/<int:user_id>/', views.GetFollowing.as_view()),
     path('active-polls/followed/<int:user_id>/',
          views.ActivePollsFromFollowedUsersView.as_view()),
     path('active-polls/non-followed/<int:user_id>/',
