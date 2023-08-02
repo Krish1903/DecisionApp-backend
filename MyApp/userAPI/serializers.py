@@ -107,8 +107,8 @@ class UserAccountSerializer(serializers.ModelSerializer):
     following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
     expo_push_token = serializers.JSONField(source='useraccount.expo_push_token', required=False)
-    profile_picture = serializers.URLField(required=False)
-    
+    profile_picture = serializers.URLField(source='useraccount.profile_picture', required=False)
+
     class Meta:
         model = UserAccount
         fields = (
