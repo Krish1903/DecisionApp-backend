@@ -148,7 +148,7 @@ class PollsView(APIView):
             for follower in followers:
                 if follower.expo_push_token:
                     try:
-                        push_client.publish(PushMessage(to=follower.expo_push_token, body=message_body))
+                        push_client.publish(PushMessage(to=follower.expo_push_token, body=message_body1))
                     except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                         print(e)
 
