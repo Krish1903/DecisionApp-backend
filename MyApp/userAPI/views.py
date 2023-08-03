@@ -142,7 +142,8 @@ class PollsView(APIView):
             followers = poll.owner.useraccount.followers.all()
 
             push_client = PushClient()
-            message_body = f"A new poll has been created by {poll.owner.username}!"
+            message_body = f"{poll.owner.username} on the fence about something"
+            message_body1 = f"{poll.owner.username} just made a poll, pick something: '{poll.question}'"
 
             for follower in followers:
                 if follower.expo_push_token:
@@ -332,7 +333,9 @@ class VoteView(APIView):
         option.votes.add(request.user)
         option.save()
 
-        message_body = f"{request.user.username} voted on your poll!"
+        message_body = f"{request.user.username} just on your poll"
+        message_body1 = f"{request.user.username} just picked something: '{poll.question}'"
+
 
         if poll.owner.useraccount.expo_push_token:
             push_client = PushClient()
@@ -347,7 +350,7 @@ class VoteView(APIView):
         # Create a notification for the owner of the poll
         notification = Notification(
             user=poll.owner,  
-            message=message_body,
+            message=message_body1,
             notification_type="vote",
             source_id=str(poll.id),
             created_at=timezone.now(),
@@ -357,7 +360,7 @@ class VoteView(APIView):
 
         poll_serializer = PollSerializer(poll)
 
-        return Response(poll_serializer.data, status=200)
+        return Response(poll_serializer, status=200)
 
 
 
@@ -385,7 +388,7 @@ class FollowView(APIView):
         follower.useraccount.following.add(following.useraccount)
         follower.useraccount.save()
 
-        message_body = f"{follower.username} has started following you!"
+        message_body = f"{follower.username} started following you"
 
         if following.useraccount.expo_push_token:
             push_client = PushClient()
