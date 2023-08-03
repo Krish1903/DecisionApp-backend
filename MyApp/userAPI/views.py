@@ -333,7 +333,7 @@ class VoteView(APIView):
         option.votes.add(request.user)
         option.save()
 
-        message_body = f"{request.user.username} just on your poll"
+        message_body = f"{request.user.username} just voted on your poll"
         message_body1 = f"{request.user.username} just picked something: '{poll.question}'"
 
 
