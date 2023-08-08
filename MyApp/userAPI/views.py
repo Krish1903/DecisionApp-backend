@@ -21,6 +21,7 @@ from exponent_server_sdk import DeviceNotRegisteredError, PushClient, PushMessag
 
 from requests.exceptions import ConnectionError, HTTPError
 
+from django.db.models import Q
 
 # Create your views here.
 
@@ -565,4 +566,22 @@ class VotedPollsView(APIView):
 
         serializer = PollSerializer(polls, many=True)
 
+        return Response(serializer.data, status=200)
+
+
+class UserSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, search_string, *args, **kwargs):
+        # If the search string is empty, then the URL would look like /api/usersearch/ 
+        # and you would return users in alphabetical order
+        if not search_string:
+            users = User.objects.all().exclude(id=request.user.id).order_by('username')[:20]
+        else:
+            following_users = request.user.useraccount.following.all().values_list('user__id', flat=True)
+            users = User.objects.filter(
+                Q(username__icontains=search_string) | Q(first_name__icontains=search_string) | Q(last_name__icontains=search_string)
+            ).exclude(id__in=following_users).exclude(id=request.user.id)[:20]
+
+        serializer = UserAccountFriendsSerializer(users, many=True)
         return Response(serializer.data, status=200)
