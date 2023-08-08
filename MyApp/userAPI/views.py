@@ -568,10 +568,13 @@ class VotedPollsView(APIView):
 
         return Response(serializer.data, status=200)
 
-
 class UserSearchView(APIView):
     def get(self, request, search_string=None, *args, **kwargs):
         current_user = request.user
+
+        # Check if the user is authenticated
+        if not current_user.is_authenticated:
+            return Response({"detail": "User is not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
 
         base_query = User.objects.exclude(id=current_user.id)
 
@@ -585,7 +588,9 @@ class UserSearchView(APIView):
             followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
             users = users.exclude(id__in=followed_users)
 
-            if not users.exists():
+            if not users.exists() and not search_string.strip() == "":
+                users = []
+            elif not users.exists() and search_string.strip() == "":
                 users = base_query.order_by('first_name')
         else:
             followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
