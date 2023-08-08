@@ -571,18 +571,25 @@ class VotedPollsView(APIView):
 
 class UserSearchView(APIView):
     def get(self, request, search_string=None, *args, **kwargs):
+        current_user = request.user
+
+        base_query = User.objects.exclude(id=current_user.id)
 
         if search_string:
-            users = User.objects.filter(
+            users = base_query.filter(
                 Q(username__icontains=search_string) |
                 Q(first_name__icontains=search_string) |
                 Q(last_name__icontains=search_string)
             )
+            
+            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
+            users = users.exclude(id__in=followed_users)
 
             if not users.exists():
-                users = User.objects.all().order_by('first_name')
+                users = base_query.order_by('first_name')
         else:
-            users = User.objects.all().order_by('first_name')
+            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
+            users = base_query.exclude(id__in=followed_users).order_by('first_name')
 
         user_serializer = UserSerializer(users, many=True)
         return Response(user_serializer.data, status=200)
