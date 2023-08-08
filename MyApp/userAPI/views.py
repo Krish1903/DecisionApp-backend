@@ -574,12 +574,12 @@ class UserSearchView(APIView):
 
     def get(self, request, search_string, *args, **kwargs):
         if not search_string:
-            users = User.objects.all().exclude(id=request.user.id).order_by('username')[:20]
+            users = User.objects.all().exclude(id=request.user.id).order_by('username')[:10]
         else:
             following_users = request.user.useraccount.following.all().values_list('user__id', flat=True)
             users = User.objects.filter(
                 Q(username__icontains=search_string) | Q(first_name__icontains=search_string) | Q(last_name__icontains=search_string)
-            ).exclude(id__in=following_users).exclude(id=request.user.id)[:20]
+            ).exclude(id__in=following_users).exclude(id=request.user.id)[:10]
 
         serializer = UserAccountFriendsSerializer(users, many=True)
         return Response(serializer.data, status=200)
