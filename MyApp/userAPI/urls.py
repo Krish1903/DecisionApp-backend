@@ -37,7 +37,7 @@ urlpatterns = [
     path('notifications/', views.NotificationView.as_view()),
     path('notifications/read/', views.MarkAsReadView.as_view()),
     path('voted-polls/<int:user_id>/', views.VotedPollsView.as_view()),
-    path('user-search/<str:search_string>/', views.UserSearchView.as_view()),
+    path('user-search/', views.UserSearchView.as_view()),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
