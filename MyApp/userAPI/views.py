@@ -573,8 +573,6 @@ class UserSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, search_string, *args, **kwargs):
-        # If the search string is empty, then the URL would look like /api/usersearch/ 
-        # and you would return users in alphabetical order
         if not search_string:
             users = User.objects.all().exclude(id=request.user.id).order_by('username')[:20]
         else:
