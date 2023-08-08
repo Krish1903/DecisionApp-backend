@@ -147,8 +147,14 @@ class PollsView(APIView):
 
             for follower in followers:
                 if follower.expo_push_token:
+                    notification_data = {
+                        "type": "poll",
+                        "source_id": str(poll.id)
+                    }
                     try:
-                        push_client.publish(PushMessage(to=follower.expo_push_token, body=message_body1))
+                        push_client.publish(PushMessage(
+                            to=follower.expo_push_token,
+                             body=message_body1))
                     except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                         print(e)
 
@@ -336,6 +342,10 @@ class VoteView(APIView):
         message_body = f"{request.user.username} just voted on your poll"
         message_body1 = f"{request.user.username} just picked something: '{poll.question}'"
 
+        notification_data = {
+            "type": "vote",
+            "source_id": str(poll.id)
+        }
 
         if poll.owner.useraccount.expo_push_token:
             push_client = PushClient()
@@ -343,6 +353,7 @@ class VoteView(APIView):
                 push_client.publish(PushMessage(
                     to=poll.owner.useraccount.expo_push_token, 
                     body=message_body,
+                    data=notification_data
                 ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
@@ -392,10 +403,15 @@ class FollowView(APIView):
 
         if following.useraccount.expo_push_token:
             push_client = PushClient()
+            notification_data = {
+                "type": "follow",
+                "source_id": request.user.id
+            }
             try:
                 push_client.publish(PushMessage(
                     to=following.useraccount.expo_push_token, 
                     body=message_body,
+                    data=notification_data
                 ))
             except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                 print(e)
