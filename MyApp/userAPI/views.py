@@ -574,7 +574,7 @@ class UserSearchView(APIView):
 
         # Check if the user is authenticated
         if not current_user.is_authenticated:
-            return Response({"detail": "User is not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "User is not authenticated."}, status=200)
 
         base_query = User.objects.exclude(id=current_user.id)
 
