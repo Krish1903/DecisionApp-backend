@@ -41,5 +41,7 @@ urlpatterns = [
     path('user-search/<str:search_string>/', views.UserSearchView.as_view())
 ]
 
+urlpatterns += staticfiles_urlpatterns()
+
 # access each view
 # localhost:8000/api/v1.0/user/"..."
