@@ -584,12 +584,12 @@ class UserSearchView(APIView):
             
             followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
             users = users.exclude(id__in=followed_users)
-            
-            if not users.exists():
-                users = User.objects.none()
 
+            if not users.exists():
+                users = base_query.order_by('first_name')
         else:
-            users = base_query.order_by('first_name')
+            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
+            users = base_query.exclude(id__in=followed_users).order_by('first_name')
 
         user_serializer = UserSerializer(users, many=True)
         return Response(user_serializer.data, status=200)
