@@ -568,37 +568,27 @@ class VotedPollsView(APIView):
 
         return Response(serializer.data, status=200)
 
-
 class UserSearchView(APIView):
     def get(self, request, search_string=None, *args, **kwargs):
         current_user = request.user
+        followed_users = []
 
-        if not current_user.is_authenticated:
-            return Response([], status=200)  
+        if hasattr(current_user, 'useraccount'):
+            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
 
-        base_query = User.objects.exclude(id=current_user.id)
+        base_query = User.objects.exclude(id=current_user.id) if current_user.is_authenticated else User.objects.all()
 
         if search_string:
             users = base_query.filter(
                 Q(username__icontains=search_string) |
                 Q(first_name__icontains=search_string) |
                 Q(last_name__icontains=search_string)
-            )
+            ).exclude(id__in=followed_users)
             
-            try:
-                followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
-                users = users.exclude(id__in=followed_users)
-            except AttributeError:
-                pass
-
             if not users.exists():
-                users = base_query.order_by('first_name')
+                users = base_query.order_by('first_name').exclude(id__in=followed_users)
         else:
-            try:
-                followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
-                users = base_query.exclude(id__in=followed_users).order_by('first_name')
-            except AttributeError:
-                users = base_query.order_by('first_name')
+            users = base_query.order_by('first_name').exclude(id__in=followed_users)
 
         user_serializer = UserSerializer(users, many=True)
         return Response(user_serializer.data, status=200)
