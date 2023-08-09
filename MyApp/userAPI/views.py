@@ -584,9 +584,9 @@ class UserSearchView(APIView):
                 Q(first_name__icontains=search_string) |
                 Q(last_name__icontains=search_string)
             ).exclude(id__in=followed_users)
-            
+
             if not users.exists():
-                users = base_query.order_by('first_name').exclude(id__in=followed_users)
+                return Response([], status=200)
         else:
             users = base_query.order_by('first_name').exclude(id__in=followed_users)
 
