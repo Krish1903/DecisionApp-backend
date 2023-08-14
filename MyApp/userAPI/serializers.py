@@ -69,8 +69,9 @@ class UserSerializer(serializers.ModelSerializer):
         # If an expo_push_token is provided, save it to the user's UserAccount
         if expo_push_token is not None:
             user_account = UserAccount.objects.get(user=user)
-            user_account.expo_push_token = expo_push_token
-            user_account.save()
+            if expo_push_token not in user_account.expo_push_token:
+                user_account.expo_push_token.append(expo_push_token)
+                user_account.save()
 
         return user
 
@@ -106,7 +107,7 @@ class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
-    expo_push_token = serializers.JSONField(source='useraccount.expo_push_token', required=False)
+    expo_push_token = serializers.JSONField(required=False)
     profile_picture = serializers.URLField(source='useraccount.profile_picture', required=False)
 
     class Meta:
