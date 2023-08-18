@@ -223,7 +223,6 @@ class FollowersPollsView(APIView):
         serializer = PollSerializer(page, many=True)
         return self.pagination_class.get_paginated_response(serializer.data)
 
-
 class GoogleLoginView(APIView):
     serializer_class = UserSerializer
 
@@ -231,38 +230,34 @@ class GoogleLoginView(APIView):
         email = request.data.get('email')
         full_name = request.data.get('name')
         profile_picture = request.data.get('picture')
-
+        
         try:
+            # Try to get user by email
             user = User.objects.get(email=email)
-            try:
-                user.useraccount.profile_picture = profile_picture
-                user.useraccount.save()
-            except User.useraccount.RelatedObjectDoesNotExist:
-                UserAccount.objects.create(
-                    user=user, profile_picture=profile_picture)
-
+            
+        except User.MultipleObjectsReturned:
+            # If multiple users, get the first one
+            user = User.objects.filter(email=email).first()
+            
         except User.DoesNotExist:
-            # Create new user and UserAccount if User does not exist
+            # If user does not exist, create one
             user = User(email=email)
             user.username = email.split('@')[0]
             user.set_unusable_password()
             user.first_name, user.last_name = self._get_name(full_name)
             user.save()
-
-            UserAccount.objects.create(
-                user=user, profile_picture=profile_picture)
-
-        except User.MultipleObjectsReturned:
-            # if there are multiple Users with the same email, log in the first one
-            user = User.objects.filter(email=email).first()
-            try:
-                if profile_picture and not user.useraccount.profile_picture:
-                    user.useraccount.profile_picture = profile_picture
-                    user.useraccount.save()
-            except User.useraccount.RelatedObjectDoesNotExist:
-                UserAccount.objects.create(
-                    user=user, profile_picture=profile_picture)
-
+        
+        # Try to get or create UserAccount for this user
+        user_account, created = UserAccount.objects.get_or_create(
+            user=user, 
+            defaults={'profile_picture': profile_picture}
+        )
+        
+        # If UserAccount already existed and profile_picture is updated, save it
+        if not created and profile_picture:
+            user_account.profile_picture = profile_picture
+            user_account.save()
+            
         user_serializer = UserSerializer(user)
         return Response(user_serializer.data, status=200)
 
@@ -271,6 +266,7 @@ class GoogleLoginView(APIView):
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
         return first_name, last_name
+
 
 
 class FacebookLoginView(APIView):
