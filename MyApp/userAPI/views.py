@@ -231,7 +231,6 @@ class GoogleLoginView(APIView):
         email = request.data.get('email')
         full_name = request.data.get('name')
         profile_picture = request.data.get('picture')
-        expo_push_token = request.data.get('expo_push_token')  # get the token from the request
 
         try:
             user = User.objects.get(email=email)
@@ -239,7 +238,8 @@ class GoogleLoginView(APIView):
                 user.useraccount.profile_picture = profile_picture
                 user.useraccount.save()
             except User.useraccount.RelatedObjectDoesNotExist:
-                UserAccount.objects.create(user=user, profile_picture=profile_picture)
+                UserAccount.objects.create(
+                    user=user, profile_picture=profile_picture)
 
         except User.DoesNotExist:
             # Create new user and UserAccount if User does not exist
@@ -249,11 +249,8 @@ class GoogleLoginView(APIView):
             user.first_name, user.last_name = self._get_name(full_name)
             user.save()
 
-            user_account = UserAccount.objects.create(user=user, profile_picture=profile_picture)
-            # Save the expo_push_token to the UserAccount if it was provided in the request
-            if expo_push_token:
-                user_account.expo_push_token.append(expo_push_token)
-                user_account.save()
+            UserAccount.objects.create(
+                user=user, profile_picture=profile_picture)
 
         except User.MultipleObjectsReturned:
             # if there are multiple Users with the same email, log in the first one
@@ -263,7 +260,8 @@ class GoogleLoginView(APIView):
                     user.useraccount.profile_picture = profile_picture
                     user.useraccount.save()
             except User.useraccount.RelatedObjectDoesNotExist:
-                UserAccount.objects.create(user=user, profile_picture=profile_picture)
+                UserAccount.objects.create(
+                    user=user, profile_picture=profile_picture)
 
         user_serializer = UserSerializer(user)
         return Response(user_serializer.data, status=200)
@@ -273,7 +271,6 @@ class GoogleLoginView(APIView):
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
         return first_name, last_name
-
 
 
 class FacebookLoginView(APIView):
@@ -283,7 +280,6 @@ class FacebookLoginView(APIView):
         email = request.data.get('email')
         full_name = request.data.get('name')
         profile_picture = request.data.get('picture').get('data').get('url')
-        expo_push_token = request.data.get('expo_push_token')  # get the token from the request
 
         try:
             user = User.objects.get(email=email)
@@ -291,7 +287,8 @@ class FacebookLoginView(APIView):
                 user.useraccount.profile_picture = profile_picture
                 user.useraccount.save()
             except User.useraccount.RelatedObjectDoesNotExist:
-                UserAccount.objects.create(user=user, profile_picture=profile_picture)
+                UserAccount.objects.create(
+                    user=user, profile_picture=profile_picture)
 
         except User.DoesNotExist:
             # create new user and UserAccount if User does not exist
@@ -301,11 +298,8 @@ class FacebookLoginView(APIView):
             user.first_name, user.last_name = self._get_name(full_name)
             user.save()
 
-            user_account = UserAccount.objects.create(user=user, profile_picture=profile_picture)
-            # Save the expo_push_token to the UserAccount if it was provided in the request
-            if expo_push_token:
-                user_account.expo_push_token.append(expo_push_token)
-                user_account.save()
+            UserAccount.objects.create(
+                user=user, profile_picture=profile_picture)
 
         except User.MultipleObjectsReturned:
             # if there are multiple Users with the same email, log in the first one
@@ -315,7 +309,8 @@ class FacebookLoginView(APIView):
                     user.useraccount.profile_picture = profile_picture
                     user.useraccount.save()
             except User.useraccount.RelatedObjectDoesNotExist:
-                UserAccount.objects.create(user=user, profile_picture=profile_picture)
+                UserAccount.objects.create(
+                    user=user, profile_picture=profile_picture)
 
         user_serializer = UserSerializer(user)
         return Response(user_serializer.data, status=200)
@@ -325,7 +320,6 @@ class FacebookLoginView(APIView):
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
         return first_name, last_name
-
 
 
 class VoteView(APIView):
