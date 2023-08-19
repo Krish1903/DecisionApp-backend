@@ -149,7 +149,7 @@ class PollsView(APIView):
             push_client = PushClient()
 
             for follower in followers:
-                for token in follower.expo_push_tokens:
+                for token in follower.expo_push_token:
                     try:
                         push_client.publish(PushMessage(
                             to=token,
@@ -335,9 +335,9 @@ class VoteView(APIView):
             "source_id": str(poll.id)
         }
 
-        if poll.owner.useraccount.expo_push_tokens:
+        if poll.owner.useraccount.expo_push_token:
             push_client = PushClient()
-            for token in poll.owner.useraccount.expo_push_tokens:
+            for token in poll.owner.useraccount.expo_push_token:
                 try:
                     push_client.publish(PushMessage(
                         to=token, 
@@ -394,9 +394,9 @@ class FollowView(APIView):
                 "source_id": request.user.id
             }
 
-        if following.useraccount.expo_push_tokens:
+        if following.useraccount.expo_push_token:
             push_client = PushClient()
-            for token in following.useraccount.expo_push_tokens:
+            for token in following.useraccount.expo_push_token:
                 try:
                     push_client.publish(PushMessage(
                         to=token, 

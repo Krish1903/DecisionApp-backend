@@ -33,7 +33,7 @@ class Option(models.Model):
 
 class UserAccount(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    expo_push_tokens = models.JSONField(blank=True, null=True)
+    expo_push_token = models.JSONField(blank=True, null=True)
     interacted_polls = models.ManyToManyField(
         Poll, related_name='interacted_users')
     created_at = models.DateTimeField(auto_now_add=True)
