@@ -5,7 +5,6 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from exponent_server_sdk import PushClient, PushMessage
-from django.contrib.postgres.fields import ArrayField
 
 import uuid
 
@@ -33,7 +32,7 @@ class Option(models.Model):
 
 class UserAccount(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    expo_push_tokens = ArrayField(models.CharField(max_length=200), default=list, blank=True)
+    expo_push_tokens = models.JSONField(default=list, blank=True)
     interacted_polls = models.ManyToManyField(
         Poll, related_name='interacted_users')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,10 +56,7 @@ class UserAccount(models.Model):
                 to=token, 
                 body=f'You have been followed by {follower_username}!')
             response = PushClient().publish(message)
-    def add_push_token(self, token):
-        if token not in self.expo_push_tokens:
-            self.expo_push_tokens.append(token)
-            self.save()
+
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
