@@ -5,7 +5,6 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from exponent_server_sdk import PushClient, PushMessage
-from django.contrib.postgres.fields import JSONField
 
 import uuid
 
@@ -33,7 +32,7 @@ class Option(models.Model):
 
 class UserAccount(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    expo_push_tokens = JSONField(blank=True, null=True)
+    expo_push_tokens = models.JSONField(blank=True, null=True)
     interacted_polls = models.ManyToManyField(
         Poll, related_name='interacted_users')
     created_at = models.DateTimeField(auto_now_add=True)
