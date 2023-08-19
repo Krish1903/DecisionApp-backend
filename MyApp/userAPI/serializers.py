@@ -69,6 +69,8 @@ class UserSerializer(serializers.ModelSerializer):
         # If an expo_push_token is provided, save it to the user's UserAccount
         if expo_push_token is not None:
             user_account = UserAccount.objects.get(user=user)
+            if user_account.expo_push_token is None:
+                user_account.expo_push_token = []
             if expo_push_token not in user_account.expo_push_token:
                 user_account.expo_push_token.append(expo_push_token)
                 user_account.save()
