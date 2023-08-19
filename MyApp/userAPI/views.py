@@ -146,20 +146,17 @@ class PollsView(APIView):
             message_body = f"{poll.owner.username} on the fence about something"
             message_body1 = f"{poll.owner.username} just made a poll, pick something: '{poll.question}'"
 
+            push_client = PushClient()
+
             for follower in followers:
-                if follower.expo_push_token:
-                    notification_data = {
-                        "type": "poll",
-                        "source_id": str(poll.id)
-                    }
+                for token in follower.expo_push_tokens:
                     try:
                         push_client.publish(PushMessage(
-                            to=follower.expo_push_token,
-                             body=message_body1))
+                            to=token,
+                            body=message_body1,
+                        ))
                     except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                         print(e)
-
-            return Response("success", status=201)
 
         return Response({"Err": poll_serializer.errors}, status=400)
 
@@ -338,16 +335,17 @@ class VoteView(APIView):
             "source_id": str(poll.id)
         }
 
-        if poll.owner.useraccount.expo_push_token:
+        if poll.owner.useraccount.expo_push_tokens:
             push_client = PushClient()
-            try:
-                push_client.publish(PushMessage(
-                    to=poll.owner.useraccount.expo_push_token, 
-                    body=message_body,
-                    data=notification_data
-                ))
-            except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
-                print(e)
+            for token in poll.owner.useraccount.expo_push_tokens:
+                try:
+                    push_client.publish(PushMessage(
+                        to=token, 
+                        body=message_body,
+                        data=notification_data
+                    ))
+                except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
+                    print(e)
 
         # Create a notification for the owner of the poll
         notification = Notification(
@@ -391,21 +389,22 @@ class FollowView(APIView):
         follower.useraccount.save()
 
         message_body = f"{follower.username} started following you"
-
-        if following.useraccount.expo_push_token:
-            push_client = PushClient()
-            notification_data = {
+        notification_data = {
                 "type": "follow",
                 "source_id": request.user.id
             }
-            try:
-                push_client.publish(PushMessage(
-                    to=following.useraccount.expo_push_token, 
-                    body=message_body,
-                    data=notification_data
-                ))
-            except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
-                print(e)
+
+        if following.useraccount.expo_push_tokens:
+            push_client = PushClient()
+            for token in following.useraccount.expo_push_tokens:
+                try:
+                    push_client.publish(PushMessage(
+                        to=token, 
+                        body=message_body,
+                        data=notification_data
+                    ))
+                except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
+                    print(e)
 
         # Create a notification for the followed user
         notification = Notification(
