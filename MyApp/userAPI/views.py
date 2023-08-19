@@ -23,6 +23,8 @@ from requests.exceptions import ConnectionError, HTTPError
 
 from django.db.models import Q
 
+from rest_framework import status
+
 # Create your views here.
 
 
@@ -130,24 +132,21 @@ class UserAccountView(APIView):
         user.delete()
         return Response({"msg": "User account successfully deleted"}, status=200)
 
-
 class PollsView(APIView):
     def post(self, request, format=None):
         poll_data = request.data
         poll_serializer = PollSerializer(data=poll_data)
+        
         if poll_serializer.is_valid():
             poll_serializer.save()
             
             # Access the poll instance that has been saved.
             poll = poll_serializer.instance
             followers = poll.owner.useraccount.followers.all()
-
+            
             push_client = PushClient()
-            message_body = f"{poll.owner.username} on the fence about something"
             message_body1 = f"{poll.owner.username} just made a poll, pick something: '{poll.question}'"
-
-            push_client = PushClient()
-
+            
             for follower in followers:
                 for token in follower.expo_push_token:
                     try:
@@ -157,8 +156,13 @@ class PollsView(APIView):
                         ))
                     except (PushServerError, ConnectionError, HTTPError, DeviceNotRegisteredError) as e:
                         print(e)
+                        
+            # Return a 201 Created response with the serialized poll data.
+            return Response(poll_serializer.data, status=status.HTTP_201_CREATED)
+        
+        # Return a 400 Bad Request response with the serialization errors.
+        return Response({"Err": poll_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"Err": poll_serializer.errors}, status=400)
 
     def get(self, request, format=None):
         polls = Poll.objects.all()
