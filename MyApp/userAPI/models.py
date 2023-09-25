@@ -20,6 +20,8 @@ class Poll(models.Model):
         User, related_name='created_polls', on_delete=models.CASCADE, null=True)
     expires = models.DateTimeField(default=timezone.now() + timedelta(days=7))
     image_url = models.URLField(blank=True)
+    flagged = models.BooleanField(default=False)
+
 
 
 class Option(models.Model):

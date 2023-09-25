@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer, NotificationSerializer, UserAccountFriendsSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer, NotificationSerializer, UserAccountFriendsSerializer, FlagPollSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -25,6 +25,9 @@ from django.db.models import Q
 
 from rest_framework import status
 
+from django.core.mail import send_mail
+from rest_framework import status
+from rest_framework.response import Response
 # Create your views here.
 
 
@@ -585,3 +588,37 @@ class UserSearchView(APIView):
 
         user_serializer = UserSerializer(users, many=True)
         return Response(user_serializer.data, status=200)
+
+class FlagPollView(APIView):
+
+    def post(self, request, format=None):
+        serializer = FlagPollSerializer(data=request.data)
+        if serializer.is_valid():
+            post_id = serializer.validated_data.get('post_id')
+            accused_id = serializer.validated_data.get('accused_id')
+            reporter_id = serializer.validated_data.get('reporter_id')
+
+            try:
+                poll = Poll.objects.get(id=post_id)
+                accused = User.objects.get(id=accused_id)
+                reporter = User.objects.get(id=reporter_id)
+                
+                poll.flagged = True
+                poll.save()
+
+                send_mail(
+                    'A Poll has been flagged',
+                    f"Poll with id {post_id} by user {accused.username} has been flagged by {reporter.username}. Please review.",
+                    'krishdhansinghani@gmail.com', 
+                    ['krishdhansinghani@gmail.com'],
+                    fail_silently=False,
+                )
+
+                return Response({"message": "Poll flagged and reported successfully!"}, status=status.HTTP_200_OK)
+            
+            except Poll.DoesNotExist:
+                return Response({"error": "Poll not found."}, status=status.HTTP_404_NOT_FOUND)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

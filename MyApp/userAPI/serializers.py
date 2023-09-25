@@ -4,7 +4,6 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Poll, UserAccount, Option, Notification
 
-
 class UserSerializer(serializers.ModelSerializer):
     following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
@@ -208,3 +207,8 @@ class UserAccountFriendsSerializer(serializers.ModelSerializer):
             'username',
             'profile_picture'
         ]
+
+class FlagPollSerializer(serializers.Serializer):
+    post_id = serializers.IntegerField(required=True)
+    accused_id = serializers.IntegerField(required=True)
+    reporter_id = serializers.IntegerField(required=True)
