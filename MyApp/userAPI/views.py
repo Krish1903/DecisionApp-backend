@@ -649,12 +649,13 @@ class BlockUserView(APIView):
                     reporter.following.remove(accused)
                 if reporter in accused.following.all():
                     accused.following.remove(reporter)
+                accused_serializer = UserSerializer(accused)
 
                 return Response({"message": "User blocked successfully!"}, status=status.HTTP_200_OK)
             except UserAccount.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(accused_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UnblockUserView(APIView):
@@ -670,10 +671,12 @@ class UnblockUserView(APIView):
 
                 reporter.blocked_users.remove(accused)
                 accused.blocked_users.remove(reporter)
+                
+                accused_serializer = UserSerializer(accused)
 
                 return Response({"message": "User unblocked successfully!"}, status=status.HTTP_200_OK)
             except UserAccount.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(accused_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
