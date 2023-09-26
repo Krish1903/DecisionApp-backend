@@ -36,6 +36,7 @@ class Option(models.Model):
 class UserAccount(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     expo_push_token = models.JSONField(blank=True, default=list)
+    blocked_users = models.ManyToManyField('self', symmetrical=False, related_name='blocked_by')
     interacted_polls = models.ManyToManyField(
         Poll, related_name='interacted_users')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -75,3 +76,4 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+

@@ -212,3 +212,7 @@ class FlagPollSerializer(serializers.Serializer):
     post_id = serializers.IntegerField(required=True)
     accused_id = serializers.IntegerField(required=True)
     reporter_id = serializers.IntegerField(required=True)
+
+class BlockUserSerializer(serializers.Serializer):
+    accused_id = serializers.IntegerField(required=True)
+    reporter_id = serializers.IntegerField(required=True)

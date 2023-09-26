@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer, NotificationSerializer, UserAccountFriendsSerializer, FlagPollSerializer
+from .serializers import UserSerializer, PollSerializer, OptionSerializer, UserAccountSerializer, FriendsSerializer, NotificationSerializer, UserAccountFriendsSerializer, FlagPollSerializer, BlockUserSerializer
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -567,30 +567,38 @@ class VotedPollsView(APIView):
 class UserSearchView(APIView):
     def get(self, request, search_string=None, *args, **kwargs):
         current_user = request.user
-        followed_users = []
-
-        if hasattr(current_user, 'useraccount'):
-            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
 
         base_query = User.objects.exclude(id=current_user.id) if current_user.is_authenticated else User.objects.all()
+
+        followed_users = []
+        blocked_users = []
+        
+        if hasattr(current_user, 'useraccount'):
+            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
+            blocked_users = current_user.useraccount.blocked_users.all().values_list('id', flat=True)
+            
+            blocked_by_users = User.objects.filter(blocked_users=current_user).values_list('id', flat=True)
+            blocked_users = set(list(blocked_users) + list(blocked_by_users))
+
+        base_query = base_query.exclude(id__in=followed_users).exclude(id__in=blocked_users)
 
         if search_string:
             users = base_query.filter(
                 Q(username__icontains=search_string) |
                 Q(first_name__icontains=search_string) |
                 Q(last_name__icontains=search_string)
-            ).exclude(id__in=followed_users)
+            )
 
             if not users.exists():
                 return Response([], status=200)
         else:
-            users = base_query.order_by('first_name').exclude(id__in=followed_users)
+            users = base_query.order_by('first_name')
 
         user_serializer = UserSerializer(users, many=True)
         return Response(user_serializer.data, status=200)
 
-class FlagPollView(APIView):
 
+class FlagPollView(APIView):
     def post(self, request, format=None):
         serializer = FlagPollSerializer(data=request.data)
         if serializer.is_valid():
@@ -622,3 +630,50 @@ class FlagPollView(APIView):
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BlockUserView(APIView):
+    def post(self, request, format=None):
+        serializer = BlockUserSerializer(data=request.data)
+        if serializer.is_valid():
+            accused_id = serializer.validated_data.get('accused_id')
+            reporter_id = serializer.validated_data.get('reporter_id')
+
+            try:
+                accused = UserAccount.objects.get(id=accused_id)
+                reporter = UserAccount.objects.get(id=reporter_id)
+
+                reporter.blocked_users.add(accused)
+                accused.blocked_users.add(reporter)
+
+                if accused in reporter.following.all():
+                    reporter.following.remove(accused)
+                if reporter in accused.following.all():
+                    accused.following.remove(reporter)
+
+                return Response({"message": "User blocked successfully!"}, status=status.HTTP_200_OK)
+            except UserAccount.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UnblockUserView(APIView):
+    def post(self, request, format=None):
+        serializer = BlockUserSerializer(data=request.data)
+        if serializer.is_valid():
+            accused_id = serializer.validated_data.get('accused_id')
+            reporter_id = serializer.validated_data.get('reporter_id')
+
+            try:
+                accused = UserAccount.objects.get(id=accused_id)
+                reporter = UserAccount.objects.get(id=reporter_id)
+
+                reporter.blocked_users.remove(accused)
+                accused.blocked_users.remove(reporter)
+
+                return Response({"message": "User unblocked successfully!"}, status=status.HTTP_200_OK)
+            except UserAccount.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

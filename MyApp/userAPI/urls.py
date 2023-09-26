@@ -40,7 +40,8 @@ urlpatterns = [
     path('user-search/', views.UserSearchView.as_view()),
     path('user-search/<str:search_string>/', views.UserSearchView.as_view()),
     path('flag-poll/', views.FlagPollView.as_view()),
-
+    path('block-user/', views.BlockUserView.as_view()),
+    path('unblock-user/', views.UnblockUserView.as_view()),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
