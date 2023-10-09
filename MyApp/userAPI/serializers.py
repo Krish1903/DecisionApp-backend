@@ -8,7 +8,6 @@ class UserSerializer(serializers.ModelSerializer):
     following = serializers.SerializerMethodField()
     followers = serializers.SerializerMethodField()
     expo_push_token = serializers.JSONField(required=False, write_only=True)
-
     full_name = serializers.CharField(write_only=True)
     token = serializers.SerializerMethodField()
 
@@ -30,6 +29,8 @@ class UserSerializer(serializers.ModelSerializer):
         min_length=8,
         write_only=True
     )
+    blocked_users = serializers.SerializerMethodField()
+
 
     class Meta:
         model = User
@@ -47,6 +48,7 @@ class UserSerializer(serializers.ModelSerializer):
             "following",
             "followers",
             "expo_push_token",
+            "blocked_users",
         ]
         extra_kwargs = {
             'password': {'write_only': True}
@@ -102,7 +104,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_followers(self, obj):
         return [useraccount.user.id for useraccount in obj.useraccount.followers.all()]
-
+    
+    def get_blocked_users(self, obj):
+        return [useraccount.user.id for useraccount in obj.useraccount.blocked_users.all()]
 
 class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
