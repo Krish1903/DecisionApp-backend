@@ -42,6 +42,7 @@ urlpatterns = [
     path('flag-poll/', views.FlagPollView.as_view()),
     path('block-user/', views.BlockUserView.as_view()),
     path('unblock-user/', views.UnblockUserView.as_view()),
+    path('get-blocked-users/<int:user_id>/', views.GetBlockedUsersView.as_view()),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

@@ -460,28 +460,36 @@ class GetFriendsView(APIView):
 
 class GetFollowers(APIView):
     def get(self, request, user_id, format=None):
-        try: 
-            user = get_object_or_404(User, id=user_id)
-        except User.DoesNotExist:
-            return Response("User not found.")
+        user = get_object_or_404(User, id=user_id)
 
-        followers = user.useraccount.followers.all()
+        blocked_users = user.useraccount.blocked_users.all()
+        users_blocking = User.objects.filter(useraccount__blocked_users=user)
+
+        followers = user.useraccount.followers.exclude(id__in=blocked_users).exclude(id__in=users_blocking)
         serializer = UserAccountFriendsSerializer(followers, many=True)
 
-        return Response(serializer.data, status=200)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetFollowing(APIView):
     def get(self, request, user_id, format=None):
         try: 
             user = get_object_or_404(User, id=user_id)
+            user_account = user.useraccount
+
+            blocked_users = user_account.blocked_users.all()
+            users_blocking = UserAccount.objects.filter(blocked_users__in=[user]).all()
+
+            following = user_account.following.exclude(
+                Q(user__in=blocked_users) | Q(user__in=users_blocking)
+            )
+
+            serializer = UserAccountFriendsSerializer(following, many=True)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         except User.DoesNotExist:
-            return Response("User not found.")
-
-        following = user.useraccount.following.all()
-        serializer = UserAccountFriendsSerializer(following, many=True)
-
-        return Response(serializer.data, status=200)
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
         
 class ActivePollsFromFollowedUsersView(APIView):
     def get(self, request, user_id, format=None):
@@ -680,3 +688,10 @@ class UnblockUserView(APIView):
 
         return Response(accused_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
+
+class GetBlockedUsersView(APIView):
+    def get(self, request, user_id, format=None):
+        user = get_object_or_404(User, id=user_id)
+        blocked_users = user.useraccount.blocked_users.all()
+        serializer = UserAccountFriendsSerializer(blocked_users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
