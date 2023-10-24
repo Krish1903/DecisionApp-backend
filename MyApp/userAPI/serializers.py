@@ -127,6 +127,7 @@ class UserAccountSerializer(serializers.ModelSerializer):
             "username",
             "expo_push_token",
             "followers",
+            "following",
         )
 
 
