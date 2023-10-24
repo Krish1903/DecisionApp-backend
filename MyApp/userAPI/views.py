@@ -24,6 +24,8 @@ from requests.exceptions import ConnectionError, HTTPError
 from django.db.models import Q
 
 from rest_framework import status
+from rest_framework.exceptions import NotFound, ValidationError
+
 
 from django.core.mail import send_mail
 from rest_framework import status
@@ -113,19 +115,23 @@ class UserAccountView(APIView):
         return Response(serializer.data, status=200)
 
     def put(self, request, format=None):
-        if not request.user.is_authenticated:
-            return Response("Invalid Credentials", status=403)
+        try:
+            profile = UserAccount.objects.get(user=request.user)
+        except UserAccount.DoesNotExist:
+            raise NotFound(detail="User not found.")
 
-        profile = UserAccount.objects.get(user=request.user)
         data = {
             'bio': request.data.get('bio', profile.bio),
             'profile_picture': request.data.get('profile_picture', profile.profile_picture)
         }
-        serializer = UserAccount(profile, data=data, partial=True)
+
+        serializer = UserAccountSerializer(profile, data=data, partial=True)
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
-        return Response(serializer.errors, status=400)
+
+        raise ValidationError(detail=serializer.errors)
 
     def delete(self, request, format=None):
         if not request.user.is_authenticated:
