@@ -121,7 +121,7 @@ class UserAccountView(APIView):
             'bio': request.data.get('bio', profile.bio),
             'profile_picture': request.data.get('profile_picture', profile.profile_picture)
         }
-        serializer = UserAccountSerializer(profile, data=data, partial=True)
+        serializer = UserAccount(profile, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
