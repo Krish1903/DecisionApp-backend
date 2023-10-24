@@ -123,6 +123,7 @@ class UserAccountSerializer(serializers.ModelSerializer):
             "created_at",
             "profile_picture",
             "bio",
+            "email",
             "username",
             "expo_push_token",
             "followers",

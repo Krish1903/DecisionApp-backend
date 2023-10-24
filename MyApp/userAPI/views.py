@@ -120,18 +120,23 @@ class UserAccountView(APIView):
         except UserAccount.DoesNotExist:
             raise NotFound(detail="User not found.")
 
-        data = {
-            'bio': request.data.get('bio', profile.bio),
-            'profile_picture': request.data.get('profile_picture', profile.profile_picture)
-        }
+        bio = request.data.get('bio')
+        profile_picture = request.data.get('profile_picture')
 
-        serializer = UserAccountSerializer(profile, data=data, partial=True)
+        if bio is not None: 
+            profile.bio = bio
+        
+        if profile_picture is not None:  
+            profile.profile_picture = profile_picture
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=200)
+        try:
+            profile.save()
 
-        raise ValidationError(detail=serializer.errors)
+            user_serializer = UserSerializer(profile.user)
+
+            return Response(user_serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
     def delete(self, request, format=None):
         if not request.user.is_authenticated:
