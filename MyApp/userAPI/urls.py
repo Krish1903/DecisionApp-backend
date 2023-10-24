@@ -43,7 +43,7 @@ urlpatterns = [
     path('block-user/', views.BlockUserView.as_view()),
     path('unblock-user/', views.UnblockUserView.as_view()),
     path('get-blocked-users/<int:user_id>/', views.GetBlockedUsersView.as_view()),
-    path("update-user/<int:user_id>", views.UserAccountView.as_view())
+    path("update-user/", views.UserAccountView.as_view())
 ]
 
 urlpatterns += staticfiles_urlpatterns()
