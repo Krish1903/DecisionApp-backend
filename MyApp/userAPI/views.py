@@ -596,7 +596,7 @@ class UserSearchView(APIView):
             followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
             blocked_users = current_user.useraccount.blocked_users.all().values_list('id', flat=True)
             
-            blocked_by_users = User.objects.filter(blocked_users=current_user).values_list('id', flat=True)
+            blocked_by_users = User.objects.filter(useraccount__blocked_users=current_user).values_list('id', flat=True)
             blocked_users = set(list(blocked_users) + list(blocked_by_users))
 
         base_query = base_query.exclude(id__in=followed_users).exclude(id__in=blocked_users)
