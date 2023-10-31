@@ -106,7 +106,8 @@ class UserSerializer(serializers.ModelSerializer):
         return [useraccount.user.id for useraccount in obj.useraccount.followers.all()]
     
     def get_blocked_users(self, obj):
-        return [useraccount.user.id for useraccount in obj.useraccount.blocked_users.all()]
+        return list(obj.useraccount.blocked_users.values_list('id', flat=True))
+
 
 class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
