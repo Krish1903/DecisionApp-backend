@@ -587,19 +587,20 @@ class UserSearchView(APIView):
     def get(self, request, search_string=None, *args, **kwargs):
         current_user = request.user
 
-        base_query = User.objects.exclude(id=current_user.id) if current_user.is_authenticated else User.objects.all()
+        base_query = User.objects.all()
+        if current_user.is_authenticated:
+            base_query = base_query.exclude(id=current_user.id)
 
-        followed_users = []
-        blocked_users = []
-        
-        if hasattr(current_user, 'useraccount'):
-            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
-            blocked_users = current_user.useraccount.blocked_users.all().values_list('id', flat=True)
+            if not hasattr(current_user, 'useraccount'):
+                return Response({"error": "Current user does not have an associated UserAccount."}, status=400)
             
-            blocked_by_users = User.objects.filter(useraccount__blocked_users__in=[current_user]).values_list('id', flat=True)
-            blocked_users = set(list(blocked_users) + list(blocked_by_users))
+            followed_users = current_user.useraccount.following.all().values_list('user__id', flat=True)
 
-        base_query = base_query.exclude(id__in=followed_users).exclude(id__in=blocked_users)
+            blocked_users = list(current_user.useraccount.blocked_users.all().values_list('id', flat=True))
+            blocked_by_users = User.objects.filter(useraccount__blocked_users__in=[current_user]).values_list('id', flat=True)
+            blocked_users = set(blocked_users).union(blocked_by_users)
+
+            base_query = base_query.exclude(id__in=followed_users).exclude(id__in=blocked_users)
 
         if search_string:
             users = base_query.filter(
@@ -607,9 +608,6 @@ class UserSearchView(APIView):
                 Q(first_name__icontains=search_string) |
                 Q(last_name__icontains=search_string)
             )
-
-            if not users.exists():
-                return Response([], status=200)
         else:
             users = base_query.order_by('first_name')
 
