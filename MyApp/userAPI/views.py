@@ -489,10 +489,10 @@ class GetFollowing(APIView):
             user_account = user.useraccount
 
             blocked_users = user_account.blocked_users.all()
-            users_blocking = User.objects.filter(useraccount__blocked_users=user)
+            users_blocking = UserAccount.objects.filter(blocked_users=user_account)
 
             following = user_account.following.exclude(
-                Q(user__in=blocked_users) | Q(user__in=users_blocking)
+                Q(user__in=blocked_users) | Q(useraccount__in=users_blocking)
             )
 
             serializer = UserAccountFriendsSerializer(following, many=True)
