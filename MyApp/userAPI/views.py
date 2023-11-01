@@ -492,7 +492,8 @@ class GetFollowing(APIView):
             users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
 
             following = user_account.following.exclude(
-                Q(user__in=blocked_users) | Q(useraccount__in=users_blocking)
+                Q(user__id__in=blocked_users.values_list('id', flat=True)) | 
+                Q(user__id__in=users_blocking.values_list('id', flat=True))
             )
 
             serializer = UserAccountFriendsSerializer(following, many=True)
@@ -501,7 +502,6 @@ class GetFollowing(APIView):
 
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-        
 class ActivePollsFromFollowedUsersView(APIView):
     def get(self, request, user_id, format=None):
         try:
