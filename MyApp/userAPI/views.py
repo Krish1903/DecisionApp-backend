@@ -699,7 +699,7 @@ class BlockUserView(APIView):
                     reporter.following.remove(accused)
                 if reporter in accused.following.all():
                     accused.following.remove(reporter)
-                reporter_serializer = UserSerializer(reporter)
+                reporter_serializer = UserSerializer(reporter.user)
 
                 return Response(reporter_serializer.data, status=400)
             except UserAccount.DoesNotExist:
@@ -722,7 +722,7 @@ class UnblockUserView(APIView):
                 reporter.blocked_users.remove(accused)
                 accused.blocked_users.remove(reporter)
                 
-                reporter_serializer = UserSerializer(reporter)
+                reporter_serializer = UserSerializer(reporter.user)
 
                 return Response(reporter_serializer.data, status=status.HTTP_200_OK)
             except UserAccount.DoesNotExist:
