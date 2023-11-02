@@ -216,7 +216,7 @@ class UserAccountFriendsSerializer(serializers.ModelSerializer):
         ]
 
 class FlagPollSerializer(serializers.Serializer):
-    post_id = serializers.IntegerField(required=True)
+    post_id = serializers.UUIDField(required=True)
     accused_id = serializers.IntegerField(required=True)
     reporter_id = serializers.IntegerField(required=True)
 
