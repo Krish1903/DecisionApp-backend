@@ -631,7 +631,8 @@ class FlagPollView(APIView):
                 poll.flagged = True
                 poll.save()
 
-                self.send_flag_notification_email(post_id, accused, reporter)
+                # Commented out the email sending functionality
+                # self.send_flag_notification_email(post_id, accused, reporter)
 
                 return Response({"message": "Poll flagged and reported successfully!"}, status=status.HTTP_200_OK)
             
@@ -648,14 +649,15 @@ class FlagPollView(APIView):
         reporter = User.objects.get(id=reporter_id)
         return poll, accused, reporter
 
-    def send_flag_notification_email(self, post_id, accused, reporter):
-        send_mail(
-            'A Poll has been flagged',
-            f"Poll with id {post_id} by user {accused.username} has been flagged by {reporter.username}. Please review.",
-            'krishdhansinghani@gmail.com', 
-            ['krishdhansinghani@gmail.com'],
-            fail_silently=False,
-        )
+    # Commented out the email sending method
+    # def send_flag_notification_email(self, post_id, accused, reporter):
+    #     send_mail(
+    #         'A Poll has been flagged',
+    #         f"Poll with id {post_id} by user {accused.username} has been flagged by {reporter.username}. Please review.",
+    #         'krishdhansinghani@gmail.com', 
+    #         ['krishdhansinghani@gmail.com'],
+    #         fail_silently=False,
+    #     )
 
 
 class BlockUserView(APIView):
