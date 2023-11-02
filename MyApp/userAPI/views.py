@@ -472,11 +472,15 @@ class GetFriendsView(APIView):
 class GetFollowers(APIView):
     def get(self, request, user_id, format=None):
         user = get_object_or_404(User, id=user_id)
+        user_account = user.useraccount
 
-        blocked_users = user.useraccount.blocked_users.all()
-        users_blocking = User.objects.filter(useraccount__blocked_users=user)
+        blocked_users = user_account.blocked_users.all()
+        users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
 
-        followers = user.useraccount.followers.exclude(id__in=blocked_users).exclude(id__in=users_blocking)
+        followers = user_account.followers.exclude(
+            Q(id__in=blocked_users.values_list('id', flat=True)) | 
+            Q(id__in=users_blocking.values_list('id', flat=True))
+        )
         serializer = UserAccountFriendsSerializer(followers, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
