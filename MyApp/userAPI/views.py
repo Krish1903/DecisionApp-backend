@@ -701,11 +701,11 @@ class BlockUserView(APIView):
                     accused.following.remove(reporter)
                 reporter_serializer = UserSerializer(reporter)
 
-                return Response({"message": "User blocked successfully!"}, status=status.HTTP_200_OK)
+                return Response(reporter_serializer.data, status=400)
             except UserAccount.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(reporter_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(reporter_serializer.data, status=400)
 
 
 class UnblockUserView(APIView):
