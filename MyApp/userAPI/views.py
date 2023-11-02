@@ -545,21 +545,18 @@ class ActivePollsFromNonFollowedUsersView(APIView):
         except UserAccount.DoesNotExist:
             return Response("User not found.")
 
-        blocked_users = user_account.blocked_users.all()
-        users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
+        blocked_users = user_account.blocked_users.values_list('user__id', flat=True)
+        users_blocking = User.objects.filter(useraccount__blocked_users=user_account).values_list('id', flat=True)
         blocked_users_list = list(blocked_users) + list(users_blocking)
 
-        followed_users = [
-            ua.user for ua in user_account.following.all() 
-            if ua.user not in blocked_users_list
-        ]
+        followed_users = user_account.following.values_list('user__id', flat=True)
 
         active_polls = Poll.objects.filter(
             expires__gt=timezone.now()
         ).exclude(
-            owner__in=followed_users
+            owner__id__in=followed_users
         ).exclude(
-            owner__in=blocked_users_list
+            owner__id__in=blocked_users_list
         ).exclude(
             owner=user_account.user
         ).exclude(
@@ -568,9 +565,6 @@ class ActivePollsFromNonFollowedUsersView(APIView):
 
         serializer = PollSerializer(active_polls, many=True)
         return Response(serializer.data)
-
-
-
 
 class UserPollsView(APIView):
     def get(self, request, user_id, format=None):
