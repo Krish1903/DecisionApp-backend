@@ -614,30 +614,24 @@ class UserSearchView(APIView):
         user_serializer = UserSerializer(users, many=True)
         return Response(user_serializer.data, status=200)
 
-
 class FlagPollView(APIView):
+
     def post(self, request, format=None):
         serializer = FlagPollSerializer(data=request.data)
+        
         if serializer.is_valid():
+            
             post_id = serializer.validated_data.get('post_id')
             accused_id = serializer.validated_data.get('accused_id')
             reporter_id = serializer.validated_data.get('reporter_id')
 
             try:
-                poll = Poll.objects.get(id=post_id)
-                accused = User.objects.get(id=accused_id)
-                reporter = User.objects.get(id=reporter_id)
+                poll, accused, reporter = self.get_related_objects(post_id, accused_id, reporter_id)
                 
                 poll.flagged = True
                 poll.save()
 
-                send_mail(
-                    'A Poll has been flagged',
-                    f"Poll with id {post_id} by user {accused.username} has been flagged by {reporter.username}. Please review.",
-                    'krishdhansinghani@gmail.com', 
-                    ['krishdhansinghani@gmail.com'],
-                    fail_silently=False,
-                )
+                self.send_flag_notification_email(post_id, accused, reporter)
 
                 return Response({"message": "Poll flagged and reported successfully!"}, status=status.HTTP_200_OK)
             
@@ -647,6 +641,22 @@ class FlagPollView(APIView):
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_related_objects(self, post_id, accused_id, reporter_id):
+        poll = Poll.objects.get(id=post_id)
+        accused = User.objects.get(id=accused_id)
+        reporter = User.objects.get(id=reporter_id)
+        return poll, accused, reporter
+
+    def send_flag_notification_email(self, post_id, accused, reporter):
+        send_mail(
+            'A Poll has been flagged',
+            f"Poll with id {post_id} by user {accused.username} has been flagged by {reporter.username}. Please review.",
+            'krishdhansinghani@gmail.com', 
+            ['krishdhansinghani@gmail.com'],
+            fail_silently=False,
+        )
+
 
 class BlockUserView(APIView):
     def post(self, request, format=None):
