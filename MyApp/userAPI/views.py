@@ -739,5 +739,5 @@ class GetBlockedUsersView(APIView):
     def get(self, request, user_id, format=None):
         user = get_object_or_404(User, id=user_id)
         blocked_users = user.useraccount.blocked_users.all()
-        serializer = UserAccountFriendsSerializer(blocked_users, many=True)
+        serializer = UserSerializer(blocked_users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
