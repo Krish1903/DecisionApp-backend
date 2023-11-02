@@ -512,6 +512,7 @@ class GetFollowing(APIView):
 
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
 class ActivePollsFromFollowedUsersView(APIView):
     def get(self, request, user_id, format=None):
         try:
@@ -519,12 +520,17 @@ class ActivePollsFromFollowedUsersView(APIView):
         except UserAccount.DoesNotExist:
             return Response("User not found.")
 
+        # Retrieving blocked users and users who have blocked the current user
+        blocked_users = user_account.blocked_users.all()
+        users_blocking = User.objects.filter(useraccount__blocked_users=user_account.user)
+
         followed_users = [
-            ua.user for ua in user_account.following.all() if ua.user != user_account.user]
+            ua.user for ua in user_account.following.all() if ua.user != user_account.user and ua.user not in blocked_users and ua.user not in users_blocking]
 
         active_polls = Poll.objects.filter(
             owner__in=followed_users,
-            expires__gt=timezone.now()
+            expires__gt=timezone.now(),
+            flagged=False  # Exclude flagged polls
         ).order_by('expires')
 
         serializer = PollSerializer(active_polls, many=True)
@@ -538,18 +544,26 @@ class ActivePollsFromNonFollowedUsersView(APIView):
         except UserAccount.DoesNotExist:
             return Response("User not found.")
 
+        # Retrieving blocked users and users who have blocked the current user
+        blocked_users = user_account.blocked_users.all()
+        users_blocking = User.objects.filter(useraccount__blocked_users=user_account.user)
+
         followed_users = [ua.user for ua in user_account.following.all()]
+
+        # All users to exclude from the polls (followed users, the user themself, blocked users, and users who have blocked the current user)
+        users_to_exclude = set(followed_users + [user_account.user] + list(blocked_users) + list(users_blocking))
 
         active_polls = Poll.objects.filter(
             expires__gt=timezone.now()
         ).exclude(
-            owner__in=followed_users
+            owner__in=users_to_exclude,
         ).exclude(
-            owner=user_account.user
+            flagged=True  # Exclude flagged polls
         ).order_by('expires')
 
         serializer = PollSerializer(active_polls, many=True)
         return Response(serializer.data)
+
 
 
 class UserPollsView(APIView):
