@@ -520,11 +520,8 @@ class ActivePollsFromFollowedUsersView(APIView):
         except UserAccount.DoesNotExist:
             return Response("User not found.")
 
-        blocked_users = user_account.blocked_users.all()
-        users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
-
-        blocked_user_ids = [ua.user.id for ua in blocked_users]
-        users_blocking_ids = [u.id for u in users_blocking]
+        blocked_user_ids = [ua.user.id for ua in user_account.blocked_users.all()]
+        users_blocking_ids = [u.id for u in User.objects.filter(useraccount__blocked_users=user_account)]
 
         followed_users = [
             ua.user for ua in user_account.following.all() if ua.user.id not in blocked_user_ids and ua.user.id not in users_blocking_ids]
@@ -533,14 +530,11 @@ class ActivePollsFromFollowedUsersView(APIView):
             owner__in=followed_users,
             expires__gt=timezone.now(),
             flagged=False
-        ).exclude(
-            owner__in=blocked_users
-        ).exclude(
-            owner__in=users_blocking
         ).order_by('expires')
 
         serializer = PollSerializer(active_polls, many=True)
         return Response(serializer.data)
+
 
 
 class ActivePollsFromNonFollowedUsersView(APIView):
@@ -550,25 +544,19 @@ class ActivePollsFromNonFollowedUsersView(APIView):
         except UserAccount.DoesNotExist:
             return Response("User not found.")
 
-        blocked_users = user_account.blocked_users.all()
-        users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
+        blocked_user_ids = [ua.user.id for ua in user_account.blocked_users.all()]
+        users_blocking_ids = [u.id for u in User.objects.filter(useraccount__blocked_users=user_account)]
 
-        blocked_user_ids = [ua.user.id for ua in blocked_users]
-        users_blocking_ids = [u.id for u in users_blocking]
+        followed_users_ids = [ua.user.id for ua in user_account.following.all() if ua.user.id not in blocked_user_ids and ua.user.id not in users_blocking_ids]
 
-        followed_users = [ua.user for ua in user_account.following.all() if ua.user.id not in blocked_user_ids and ua.user.id not in users_blocking_ids]
-        
         active_polls = Poll.objects.filter(
-            expires__gt=timezone.now(),
-            flagged=False
+            expires__gt=timezone.now()
         ).exclude(
-            owner__in=followed_users
+            owner__id__in=followed_users_ids
         ).exclude(
             owner=user_account.user
         ).exclude(
-            owner__in=blocked_users
-        ).exclude(
-            owner__in=users_blocking
+            flagged=True
         ).order_by('expires')
 
         serializer = PollSerializer(active_polls, many=True)
