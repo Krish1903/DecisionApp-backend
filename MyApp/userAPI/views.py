@@ -179,7 +179,12 @@ class PollsView(APIView):
 
 
     def get(self, request, format=None):
-        polls = Poll.objects.all()
+        current_user = request.user
+        
+        blocked_users = current_user.useraccount.blocked_users.all()
+        
+        polls = Poll.objects.exclude(owner__in=blocked_users).exclude(flagged=True)
+        
         serializer = PollSerializer(polls, many=True)
         return Response(serializer.data)
 
@@ -682,13 +687,13 @@ class BlockUserView(APIView):
                     reporter.following.remove(accused)
                 if reporter in accused.following.all():
                     accused.following.remove(reporter)
-                accused_serializer = UserSerializer(accused)
+                reporter_serializer = UserSerializer(reporter)
 
                 return Response({"message": "User blocked successfully!"}, status=status.HTTP_200_OK)
             except UserAccount.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(accused_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(reporter_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UnblockUserView(APIView):
