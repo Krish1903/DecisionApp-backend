@@ -523,8 +523,11 @@ class ActivePollsFromFollowedUsersView(APIView):
         blocked_users = user_account.blocked_users.all()
         users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
 
+        blocked_user_ids = [ua.user.id for ua in blocked_users]
+        users_blocking_ids = [u.id for u in users_blocking]
+
         followed_users = [
-            ua.user for ua in user_account.following.all() if ua.user != user_account.user and ua.user not in blocked_users and ua.user not in users_blocking]
+            ua.user for ua in user_account.following.all() if ua.user.id not in blocked_user_ids and ua.user.id not in users_blocking_ids]
 
         active_polls = Poll.objects.filter(
             owner__in=followed_users,
@@ -550,8 +553,11 @@ class ActivePollsFromNonFollowedUsersView(APIView):
         blocked_users = user_account.blocked_users.all()
         users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
 
-        followed_users = [ua.user for ua in user_account.following.all() if ua.user not in blocked_users and ua.user not in users_blocking]
+        blocked_user_ids = [ua.user.id for ua in blocked_users]
+        users_blocking_ids = [u.id for u in users_blocking]
 
+        followed_users = [ua.user for ua in user_account.following.all() if ua.user.id not in blocked_user_ids and ua.user.id not in users_blocking_ids]
+        
         active_polls = Poll.objects.filter(
             expires__gt=timezone.now(),
             flagged=False
