@@ -529,7 +529,7 @@ class ActivePollsFromFollowedUsersView(APIView):
         active_polls = Poll.objects.filter(
             owner__in=followed_users,
             expires__gt=timezone.now(),
-            flagged=False 
+            flagged=False
         ).order_by('expires')
 
         serializer = PollSerializer(active_polls, many=True)
@@ -546,14 +546,14 @@ class ActivePollsFromNonFollowedUsersView(APIView):
         blocked_users = user_account.blocked_users.all()
         users_blocking = User.objects.filter(useraccount__blocked_users=user_account)
 
-        followed_users = [ua.user for ua in user_account.following.all()]
-
-        users_to_exclude = set(followed_users + [user_account.user] + list(blocked_users) + list(users_blocking))
+        followed_users = [ua.user for ua in user_account.following.all() if ua.user not in blocked_users and ua.user not in users_blocking]
 
         active_polls = Poll.objects.filter(
             expires__gt=timezone.now()
         ).exclude(
-            owner__in=users_to_exclude,
+            owner__in=followed_users
+        ).exclude(
+            owner=user_account.user
         ).exclude(
             flagged=True
         ).order_by('expires')
