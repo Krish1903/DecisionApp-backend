@@ -108,6 +108,19 @@ class UserSerializer(serializers.ModelSerializer):
     def get_blocked_users(self, obj):
         return list(obj.useraccount.blocked_users.values_list('id', flat=True))
 
+    def to_representation(self, instance):
+        request_user = self.context['request'].user
+        blocked = instance.useraccount.blocked_users.filter(id=request_user.id).exists()
+        blocking = request_user.useraccount.blocked_users.filter(id=instance.id).exists()
+
+        if blocked or blocking:
+            return {
+                'id': instance.id,
+                'username': instance.username,
+                'profile_picture': instance.useraccount.profile_picture
+            }
+
+        return super().to_representation(instance)
 
 class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
@@ -184,6 +197,16 @@ class PollSerializer(serializers.ModelSerializer):
             return obj.owner.useraccount.profile_picture
         return None
 
+    def to_representation(self, instance):
+        request_user = self.context['request'].user
+        blocked = instance.owner.useraccount.blocked_users.filter(id=request_user.id).exists()
+        blocking = request_user.useraccount.blocked_users.filter(id=instance.owner.id).exists()
+
+        # Exclude poll data if the owner is blocked or is blocking the requesting user
+        if blocked or blocking:
+            return {}  # Return an empty dict or limited data
+
+        return super().to_representation(instance)
 
 class FriendsSerializer(serializers.ModelSerializer):
     profile_picture = serializers.URLField(

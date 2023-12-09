@@ -179,16 +179,13 @@ class PollsView(APIView):
 
 
     def get(self, request, format=None):
-        current_user = request.user
+        blocked_users = request.user.useraccount.blocked_users.values_list('user', flat=True)
+        users_blocking = UserAccount.objects.filter(blocked_users=request.user.useraccount).values_list('user', flat=True)
 
-        blocked_users = current_user.useraccount.blocked_users.all()
-        users_blocking = User.objects.filter(useraccount__blocked_users=current_user)
-
-        polls = Poll.objects.exclude(user__in=blocked_users).exclude(user__in=users_blocking).exclude(flagged=True)
+        polls = Poll.objects.exclude(owner__in=blocked_users).exclude(owner__in=users_blocking)
 
         serializer = PollSerializer(polls, many=True)
         return Response(serializer.data)
-
 
 class ActivePollsView(APIView):
     def get(self, request, format=None):
@@ -685,54 +682,40 @@ class FlagPollView(APIView):
 
 
 class BlockUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, format=None):
-        serializer = BlockUserSerializer(data=request.data)
-        if serializer.is_valid():
-            accused_id = serializer.validated_data.get('accused_id')
-            reporter_id = serializer.validated_data.get('reporter_id')
+        accused_id = request.data.get('accused_id')
 
-            try:
-                accused = UserAccount.objects.get(id=accused_id)
-                reporter = UserAccount.objects.get(id=reporter_id)
+        try:
+            accused = User.objects.get(id=accused_id)
+            request.user.useraccount.blocked_users.add(accused.useraccount)
+            # Optionally, remove from followers/following
+            request.user.useraccount.following.remove(accused.useraccount)
+            accused.useraccount.followers.remove(request.user.useraccount)
 
-                reporter.blocked_users.add(accused)
-                accused.blocked_users.add(reporter)
+            serializer = UserSerializer(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-                if accused in reporter.following.all():
-                    reporter.following.remove(accused)
-                if reporter in accused.following.all():
-                    accused.following.remove(reporter)
-
-                reporter_serializer = UserSerializer(reporter.user)
-
-                return Response(reporter_serializer.data, status=status.HTTP_200_OK)  
-            except UserAccount.DoesNotExist:
-                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UnblockUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, format=None):
-        serializer = BlockUserSerializer(data=request.data)
-        if serializer.is_valid():
-            accused_id = serializer.validated_data.get('accused_id')
-            reporter_id = serializer.validated_data.get('reporter_id')
+        accused_id = request.data.get('accused_id')
 
-            try:
-                accused = UserAccount.objects.get(id=accused_id)
-                reporter = UserAccount.objects.get(id=reporter_id)
+        try:
+            accused = User.objects.get(id=accused_id)
+            request.user.useraccount.blocked_users.remove(accused.useraccount)
 
-                reporter.blocked_users.remove(accused)
-                accused.blocked_users.remove(reporter)
-                
-                reporter_serializer = UserSerializer(reporter.user)
+            serializer = UserSerializer(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-                return Response(reporter_serializer.data, status=status.HTTP_200_OK)
-            except UserAccount.DoesNotExist:
-                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        return Response(reporter_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetBlockedUsersView(APIView):
