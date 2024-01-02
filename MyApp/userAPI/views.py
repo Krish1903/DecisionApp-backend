@@ -59,7 +59,7 @@ class UsersView(APIView):
 
         user_data = request.data
         print(request.data)
-        user_serializer = UserSerializer(data=user_data)
+        user_serializer = UserSerializer(data=user_data, context={'request': request})
 
         if user_serializer.is_valid(raise_exception=False):
             user_serializer.save()
