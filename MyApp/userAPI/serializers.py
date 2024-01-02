@@ -110,17 +110,25 @@ class UserSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         request_user = self.context['request'].user
-        blocked = instance.useraccount.blocked_users.filter(id=request_user.id).exists()
-        blocking = request_user.useraccount.blocked_users.filter(id=instance.id).exists()
 
-        if blocked or blocking:
-            return {
-                'id': instance.id,
-                'username': instance.username,
-                'profile_picture': instance.useraccount.profile_picture
-            }
+        # Check if request_user is authenticated and has a useraccount
+        if request_user.is_authenticated and hasattr(request_user, 'useraccount'):
+            blocked = instance.useraccount.blocked_users.filter(id=request_user.id).exists()
+            blocking = request_user.useraccount.blocked_users.filter(id=instance.id).exists()
+
+            if blocked or blocking:
+                return {
+                    'id': instance.id,
+                    'username': instance.username,
+                    'profile_picture': instance.useraccount.profile_picture
+                }
+        else:
+            # Handle the case for AnonymousUser
+            blocked = False
+            blocking = False
 
         return super().to_representation(instance)
+
 
 class UserAccountSerializer(serializers.ModelSerializer):
     user = UserSerializer()
