@@ -207,14 +207,22 @@ class PollSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         request_user = self.context['request'].user
-        blocked = instance.owner.useraccount.blocked_users.filter(id=request_user.id).exists()
-        blocking = request_user.useraccount.blocked_users.filter(id=instance.owner.id).exists()
 
-        # Exclude poll data if the owner is blocked or is blocking the requesting user
-        if blocked or blocking:
-            return {}  # Return an empty dict or limited data
+        # Check if request_user is authenticated and has a useraccount
+        if request_user.is_authenticated and hasattr(request_user, 'useraccount'):
+            blocked = instance.owner.useraccount.blocked_users.filter(id=request_user.id).exists()
+            blocking = request_user.useraccount.blocked_users.filter(id=instance.owner.id).exists()
+
+            # Exclude poll data if the owner is blocked or is blocking the requesting user
+            if blocked or blocking:
+                return {}  # Return an empty dict or limited data
+        else:
+            # Handle the case for AnonymousUser
+            blocked = False
+            blocking = False
 
         return super().to_representation(instance)
+
 
 class FriendsSerializer(serializers.ModelSerializer):
     profile_picture = serializers.URLField(
