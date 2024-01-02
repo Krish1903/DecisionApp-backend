@@ -76,7 +76,7 @@ class UserLoginView(APIView):
         if not request.user.is_authenticated or not request.user.is_active:
             return Response("Invalid Credentials", status=403)
 
-        serializer = UserSerializer(request.user)
+        serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, format=None):
@@ -99,7 +99,7 @@ class UserLoginView(APIView):
                 user.useraccount.expo_push_token.append(expo_push_token)
                 user.useraccount.save()
 
-            user_serializer = UserSerializer(user)
+            user_serializer = UserSerializer(user, context={'request': request})
             return Response(user_serializer.data, status=200)
 
         return Response("Invalid Credentials", status=403)
@@ -132,7 +132,8 @@ class UserAccountView(APIView):
         try:
             profile.save()
 
-            user_serializer = UserSerializer(profile.user)
+            user_serializer = UserSerializer(data=profile.user, context={'request': request})
+
 
             return Response(user_serializer.data, status=200)
         except Exception as e:
@@ -276,7 +277,7 @@ class GoogleLoginView(APIView):
             user_account.profile_picture = profile_picture
             user_account.save()
             
-        user_serializer = UserSerializer(user)
+        user_serializer = UserSerializer(user, context={'request': request})
         return Response(user_serializer.data, status=200)
 
     def _get_name(self, full_name):
@@ -314,7 +315,7 @@ class FacebookLoginView(APIView):
         # At this point, we have a User instance (either retrieved or created)
         self._update_or_create_user_account(user, profile_picture)
 
-        user_serializer = UserSerializer(user)
+        user_serializer = UserSerializer(user, context={'request': request})
         return Response(user_serializer.data, status=200)
 
     def _update_or_create_user_account(self, user, profile_picture):
@@ -391,7 +392,7 @@ class UserProfileView(APIView):
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response("User not found", status=404)
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
 
@@ -438,7 +439,7 @@ class FollowView(APIView):
         )
         notification.save()
 
-        serializer = UserSerializer(follower)
+        serializer = UserSerializer(follower, context={'request': request})
 
         return Response({"msg": "success"}, status=200)
 
@@ -458,7 +459,7 @@ class UnfollowView(APIView):
         follower.useraccount.following.remove(following.useraccount)
         follower.useraccount.save()
 
-        serializer = UserSerializer(follower)
+        serializer = UserSerializer(follower, context={'request': request})
 
         return Response({"msg": "success"}, status=200)
 
@@ -694,7 +695,8 @@ class BlockUserView(APIView):
             request.user.useraccount.following.remove(accused.useraccount)
             accused.useraccount.followers.remove(request.user.useraccount)
 
-            serializer = UserSerializer(request.user)
+            serializer = UserSerializer(request.user, context={'request': request})
+
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -711,7 +713,8 @@ class UnblockUserView(APIView):
             accused = User.objects.get(id=accused_id)
             request.user.useraccount.blocked_users.remove(accused.useraccount)
 
-            serializer = UserSerializer(request.user)
+            serializer = UserSerializer(request.user, context={'request': request})
+
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
