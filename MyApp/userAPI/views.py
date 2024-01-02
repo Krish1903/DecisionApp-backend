@@ -632,7 +632,7 @@ class UserSearchView(APIView):
         else:
             users = base_query.order_by('first_name')
 
-        user_serializer = UserSerializer(users, many=True)
+        user_serializer = UserSerializer(users, many=True, context={'request': request})
         return Response(user_serializer.data, status=200)
 
 class FlagPollView(APIView):
