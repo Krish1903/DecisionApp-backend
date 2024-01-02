@@ -112,7 +112,7 @@ class UserAccountView(APIView):
 
         profile = UserAccount.objects.get(user=request.user)
         serializer = UserAccount(profile)
-        return Response(serializer.data, status=200)
+        return Response(serializer.data, status=200, context={'request': request})
 
     def put(self, request, format=None):
         try:
@@ -150,7 +150,7 @@ class UserAccountView(APIView):
 class PollsView(APIView):
     def post(self, request, format=None):
         poll_data = request.data
-        poll_serializer = PollSerializer(data=poll_data)
+        poll_serializer = PollSerializer(data=poll_data, context={'request': request})
         
         if poll_serializer.is_valid():
             poll_serializer.save()
@@ -185,27 +185,27 @@ class PollsView(APIView):
 
         polls = Poll.objects.exclude(owner__in=blocked_users).exclude(owner__in=users_blocking)
 
-        serializer = PollSerializer(polls, many=True)
+        serializer = PollSerializer(polls, many=True, context={'request': request})
         return Response(serializer.data)
 
 class ActivePollsView(APIView):
     def get(self, request, format=None):
         active_polls = Poll.objects.filter(
             expires__gt=timezone.now()).order_by('expires')
-        serializer = PollSerializer(active_polls, many=True)
+        serializer = PollSerializer(active_polls, many=True, context={'request': request})
         return Response(serializer.data)
 
 class SinglePollView(APIView):
     def get(self, request, *args, **kwargs):
         poll_id = kwargs.get('id') 
         poll = get_object_or_404(Poll, id=poll_id)
-        serializer = PollSerializer(poll)
+        serializer = PollSerializer(poll, context={'request': request})
         return Response(serializer.data)
 
 class OptionsView(APIView):
     def post(self, request, format=None):
         option_data = request.data
-        option_serializer = OptionSerializer(data=option_data)
+        option_serializer = OptionSerializer(data=option_data, context={'request': request})
         if option_serializer.is_valid():
             option_serializer.save()
             return Response({"option": option_serializer.data}, status=200)
@@ -220,7 +220,7 @@ class OptionsView(APIView):
         except Option.DoesNotExist:
             return Response("Option not found", status=404)
 
-        serializer = OptionSerializer(option, data=request.data, partial=True)
+        serializer = OptionSerializer(option, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
@@ -239,7 +239,7 @@ class FollowersPollsView(APIView):
             owner__useraccount__in=user_account.followers.all()).order_by('expires')
         page = self.pagination_class.paginate_queryset(
             followers_polls, request)
-        serializer = PollSerializer(page, many=True)
+        serializer = PollSerializer(page, many=True, context={'request': request})
         return self.pagination_class.get_paginated_response(serializer.data)
 
 class GoogleLoginView(APIView):
@@ -380,7 +380,7 @@ class VoteView(APIView):
         )
         notification.save()
 
-        poll_serializer = PollSerializer(poll)
+        poll_serializer = PollSerializer(poll, context={'request': request})
 
         return Response(poll_serializer.data, status=200)
 
@@ -469,7 +469,7 @@ class GetFriendsView(APIView):
         ids_list = ids.split(',')
 
         users = User.objects.filter(id__in=ids_list)
-        serializer = FriendsSerializer(users, many=True)
+        serializer = FriendsSerializer(users, many=True, context={'request': request})
 
         return Response(serializer.data, status=200)
 
@@ -485,7 +485,7 @@ class GetFollowers(APIView):
             Q(id__in=blocked_users.values_list('id', flat=True)) | 
             Q(id__in=users_blocking.values_list('id', flat=True))
         )
-        serializer = UserAccountFriendsSerializer(followers, many=True)
+        serializer = UserAccountFriendsSerializer(followers, many=True, context={'request': request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -504,7 +504,7 @@ class GetFollowing(APIView):
                 Q(user__id__in=users_blocking.values_list('id', flat=True))
             )
 
-            serializer = UserAccountFriendsSerializer(following, many=True)
+            serializer = UserAccountFriendsSerializer(following, many=True, context={'request': request})
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -533,7 +533,7 @@ class ActivePollsFromFollowedUsersView(APIView):
             flagged=False
         ).order_by('expires')
 
-        serializer = PollSerializer(active_polls, many=True)
+        serializer = PollSerializer(active_polls, many=True, context={'request': request})
         return Response(serializer.data)
 
 class ActivePollsFromNonFollowedUsersView(APIView):
@@ -561,7 +561,7 @@ class ActivePollsFromNonFollowedUsersView(APIView):
             flagged=True
         ).order_by('expires')
 
-        serializer = PollSerializer(active_polls, many=True)
+        serializer = PollSerializer(active_polls, many=True, context={'request': request})
         return Response(serializer.data)
 
 class UserPollsView(APIView):
@@ -570,7 +570,7 @@ class UserPollsView(APIView):
 
         user_polls = Poll.objects.filter(owner=user)
 
-        serializer = PollSerializer(user_polls, many=True)
+        serializer = PollSerializer(user_polls, many=True, context={'request': request})
         return Response(serializer.data)
 
 class NotificationView(APIView):
@@ -578,7 +578,7 @@ class NotificationView(APIView):
 
     def get(self, request, *args, **kwargs):
         notifications = Notification.objects.filter(user=request.user)
-        serializer = NotificationSerializer(notifications, many=True)
+        serializer = NotificationSerializer(notifications, many=True, context={'request': request})
         return Response(serializer.data)
 
 class MarkAsReadView(APIView):
@@ -588,7 +588,7 @@ class MarkAsReadView(APIView):
         Notification.objects.filter(user=request.user, read=False).update(read=True)
         notifications = Notification.objects.filter(user=request.user)
         
-        serializer = NotificationSerializer(notifications, many=True)
+        serializer = NotificationSerializer(notifications, many=True, context={'request': request})
 
         return Response(serializer.data, status=200)
 
@@ -601,7 +601,7 @@ class VotedPollsView(APIView):
             options__votes__in=[user]
         ).exclude(owner=user).distinct()
 
-        serializer = PollSerializer(polls, many=True)
+        serializer = PollSerializer(polls, many=True, context={'request': request})
 
         return Response(serializer.data, status=200)
 
@@ -639,7 +639,7 @@ class UserSearchView(APIView):
 class FlagPollView(APIView):
 
     def post(self, request, format=None):
-        serializer = FlagPollSerializer(data=request.data)
+        serializer = FlagPollSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
             
@@ -725,5 +725,5 @@ class GetBlockedUsersView(APIView):
     def get(self, request, user_id, format=None):
         user = get_object_or_404(User, id=user_id)
         blocked_user_accounts = user.useraccount.blocked_users.all()
-        serializer = UserAccountFriendsSerializer(blocked_user_accounts, many=True)
+        serializer = UserAccountFriendsSerializer(blocked_user_accounts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
