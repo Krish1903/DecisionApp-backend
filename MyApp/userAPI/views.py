@@ -30,6 +30,8 @@ from rest_framework.exceptions import NotFound, ValidationError
 from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
+
+import jwt 
 # Create your views here.
 
 
@@ -330,6 +332,45 @@ class FacebookLoginView(APIView):
         last_name = parts[1] if len(parts) > 1 else ''
         return first_name, last_name
 
+class AppleLoginView(APIView):
+    serializer_class = UserSerializer
+
+    def post(self, request):
+        token = request.data.get('token')
+        full_name = request.data.get('name', '')  # Name might not be provided by Apple
+
+        # Decode the token (you'll need to handle exceptions and errors appropriately)
+        decoded_token = jwt.decode(token, options={"verify_signature": False})  # Replace with actual verification
+
+        email = decoded_token.get('email')
+        if not email:
+            return Response({"error": "Email not provided by Apple"}, status=400)
+
+        # Try to get or create the user
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={'username': email.split('@')[0], 'first_name': '', 'last_name': ''}
+        )
+
+        if created:
+            user.set_unusable_password()
+            user.first_name, user.last_name = self._get_name(full_name)
+            user.save()
+
+        # Update or create UserAccount
+        self._update_or_create_user_account(user)
+
+        user_serializer = UserSerializer(user, context={'request': request})
+        return Response(user_serializer.data, status=200)
+
+    def _update_or_create_user_account(self, user):
+        UserAccount.objects.get_or_create(user=user)
+
+    def _get_name(self, full_name):
+        parts = full_name.split(' ')
+        first_name = parts[0] if parts else ''
+        last_name = parts[1] if len(parts) > 1 else ''
+        return first_name, last_name
 
 class VoteView(APIView):
     permission_classes = [IsAuthenticated]
